@@ -23,9 +23,12 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score, input } = (location.state as { score: number; input: EmissionInput }) || {};
+  const { score: rawScore, input } = (location.state as { score: number; input: EmissionInput }) || {};
 
-  if (!score && score !== 0) {
+  // Clamp score: negative or zero values display as 1, max at 100
+  const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
+
+  if (rawScore === undefined && rawScore !== 0) {
     return <Navigate to="/analyze" replace />;
   }
 
