@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
-import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut } from "lucide-react";
 import { format } from "date-fns";
 
 interface EFIRecord {
@@ -14,6 +15,7 @@ interface EFIRecord {
 }
 
 const History = () => {
+  const { signOut } = useAuth();
   const [records, setRecords] = useState<EFIRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,12 +55,18 @@ const History = () => {
             </div>
             <span className="text-lg font-bold text-foreground">EFI Analyzer</span>
           </Link>
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
+          <div className="flex items-center gap-2">
+            <Link to="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-1" />
+              Sign Out
             </Button>
-          </Link>
+          </div>
         </header>
 
         {/* History Card */}
