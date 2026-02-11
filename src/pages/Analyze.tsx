@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { EmissionInput, emissionFields } from "@/components/EmissionInput";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Leaf, ArrowLeft, Loader2, Beaker } from "lucide-react";
+import { Leaf, ArrowLeft, Loader2, Beaker, LogOut } from "lucide-react";
 
 type EmissionValues = Record<string, string>;
 
 const Analyze = () => {
   const navigate = useNavigate();
+  const { session, signOut } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [values, setValues] = useState<EmissionValues>(
     emissionFields.reduce((acc, field) => ({ ...acc, [field.id]: "" }), {})
@@ -75,6 +77,7 @@ const Analyze = () => {
         .insert({
           input: input,
           efi_score: efiScore,
+          user_id: session?.user?.id,
         });
 
       if (insertError) throw insertError;
@@ -108,12 +111,18 @@ const Analyze = () => {
             </div>
             <span className="text-lg font-bold text-foreground">EFI Analyzer</span>
           </Link>
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
+          <div className="flex items-center gap-2">
+            <Link to="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-1" />
+              Sign Out
             </Button>
-          </Link>
+          </div>
         </header>
 
         {/* Form Card */}
