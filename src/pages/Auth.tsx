@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { Leaf, Loader2 } from "lucide-react";
+import { Leaf, Loader2, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -52,6 +52,12 @@ const Auth = () => {
     <div className="min-h-screen relative flex items-center justify-center">
       <HeroBackground />
       <div className="bg-card rounded-3xl shadow-card border border-border/50 p-8 md:p-12 max-w-md w-full mx-4 animate-fade-in text-center space-y-6">
+        <Link to="/" className="absolute top-4 left-4">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+        </Link>
         <div className="flex justify-center">
           <div className="p-3 rounded-xl gradient-eco">
             <Leaf className="h-8 w-8 text-primary-foreground" />
