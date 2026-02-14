@@ -20,21 +20,21 @@ export type Database = {
           efi_score: number
           id: string
           input: Json
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string
           efi_score: number
           id?: string
           input: Json
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string
           efi_score?: number
           id?: string
           input?: Json
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
