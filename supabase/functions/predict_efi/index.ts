@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import modelData from "./efi_forest_model_lite.json" with { type: "json" };
 
 const corsHeaders = {
@@ -41,7 +42,6 @@ function traverseTree(node: TreeNode, features: number[]): number {
   if (node.t === "l") {
     return node.v!;
   }
-  // Internal node: compare feature at index `f` with threshold `th`
   if (features[node.f!] <= node.th!) {
     return traverseTree(node.l!, features);
   } else {
@@ -53,7 +53,6 @@ function predictEFI(input: EmissionInput): number {
   const features = FEATURE_KEYS.map(k => input[k]);
   const trees = modelData as TreeNode[];
 
-  // Average predictions across all trees (Random Forest)
   let sum = 0;
   for (const tree of trees) {
     sum += traverseTree(tree, features);
@@ -61,9 +60,30 @@ function predictEFI(input: EmissionInput): number {
   const raw = sum / trees.length;
 
   console.log("Raw model prediction:", raw);
-
-  // Clamp: scores ≤ 0 become 1, scores > 100 capped at 100
   return Math.max(1, Math.min(100, Math.round(raw)));
+}
+
+async function computePercentile(score: number): Promise<number> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Get all historical EFI scores
+  const { data, error } = await supabase
+    .from("efi_records")
+    .select("efi_score");
+
+  if (error || !data || data.length === 0) {
+    console.log("No historical data for percentile, defaulting to 50");
+    return 50;
+  }
+
+  const scores = data.map((r: { efi_score: number }) => r.efi_score);
+  const belowCount = scores.filter((s: number) => s < score).length;
+  const percentile = Math.round((belowCount / scores.length) * 100);
+
+  console.log(`Percentile: ${percentile}% (${belowCount}/${scores.length} scores below ${score})`);
+  return percentile;
 }
 
 serve(async (req) => {
@@ -83,10 +103,12 @@ serve(async (req) => {
     }
 
     const efiScore = predictEFI(input);
-    console.log("Predicted EFI score:", efiScore);
+    const percentile = await computePercentile(efiScore);
+
+    console.log("Predicted EFI score:", efiScore, "Percentile:", percentile);
 
     return new Response(
-      JSON.stringify({ efi_score: efiScore }),
+      JSON.stringify({ efi_score: efiScore, percentile }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error: unknown) {
