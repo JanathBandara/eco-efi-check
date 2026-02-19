@@ -23,7 +23,7 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score: rawScore, percentile: rawPercentile, input } = (location.state as { score: number; percentile: number; input: EmissionInput }) || {};
+  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput }) || {};
 
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
@@ -32,8 +32,8 @@ const Results = () => {
     return <Navigate to="/analyze" replace />;
   }
 
-  const getStatusInfo = (value: number) => {
-    if (value >= 70) {
+  const getStatusInfo = (condition: string) => {
+    if (condition === "Good") {
       return {
         label: "Healthy",
         description: "Your engine is performing excellently with optimal emissions.",
@@ -42,7 +42,7 @@ const Results = () => {
         bgClass: "bg-gauge-healthy/10",
       };
     }
-    if (value >= 40) {
+    if (condition === "Moderate") {
       return {
         label: "Moderate",
         description: "Your engine shows some wear. Consider maintenance soon.",
@@ -60,7 +60,7 @@ const Results = () => {
     };
   };
 
-  const status = getStatusInfo(score);
+  const status = getStatusInfo(backendCondition ?? "Moderate");
   const percentile = rawPercentile ?? 50;
 
   const generatePDF = () => {
