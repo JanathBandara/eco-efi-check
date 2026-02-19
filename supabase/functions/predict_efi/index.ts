@@ -5,7 +5,7 @@ import modelData from "./efi_forest_model_lite.json" with { type: "json" };
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface EmissionInput {
@@ -32,11 +32,55 @@ interface TreeNode {
   v?: number;
 }
 
-// Feature order matching the trained model
 const FEATURE_KEYS: (keyof EmissionInput)[] = [
   'acc_hc', 'acc_co', 'acc_co2', 'acc_o2', 'acc_lambda', 'acc_rpm',
   'idle_hc', 'idle_co', 'idle_co2', 'idle_o2', 'idle_lambda', 'idle_rpm',
 ];
+
+// Cached distribution data - loaded once per cold start
+let distributionScores: number[] | null = null;
+
+async function loadDistribution(): Promise<number[]> {
+  if (distributionScores !== null) {
+    return distributionScores;
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const { data, error } = await supabase.storage
+    .from("efi-distribution")
+    .download("efi_distribution.json");
+
+  if (error || !data) {
+    console.error("Failed to load distribution file:", error);
+    throw new Error("Could not load EFI distribution dataset");
+  }
+
+  const text = await data.text();
+  const parsed = JSON.parse(text);
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("Invalid distribution file format");
+  }
+
+  distributionScores = parsed.map(Number).sort((a, b) => a - b);
+  console.log(`Distribution loaded: ${distributionScores.length} scores cached`);
+  return distributionScores;
+}
+
+function computePercentile(score: number, distribution: number[]): number {
+  const belowOrEqual = distribution.filter(s => s <= score).length;
+  const percentile = Math.round((belowOrEqual / distribution.length) * 100);
+  return Math.max(0, Math.min(100, percentile));
+}
+
+function getCondition(score: number): string {
+  if (score >= 70) return "Good";
+  if (score >= 40) return "Moderate";
+  return "Poor";
+}
 
 function traverseTree(node: TreeNode, features: number[]): number {
   if (node.t === "l") {
@@ -63,29 +107,6 @@ function predictEFI(input: EmissionInput): number {
   return Math.max(1, Math.min(100, Math.round(raw)));
 }
 
-async function computePercentile(score: number): Promise<number> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-  // Get all historical EFI scores
-  const { data, error } = await supabase
-    .from("efi_records")
-    .select("efi_score");
-
-  if (error || !data || data.length === 0) {
-    console.log("No historical data for percentile, defaulting to 50");
-    return 50;
-  }
-
-  const scores = data.map((r: { efi_score: number }) => r.efi_score);
-  const belowCount = scores.filter((s: number) => s < score).length;
-  const percentile = Math.round((belowCount / scores.length) * 100);
-
-  console.log(`Percentile: ${percentile}% (${belowCount}/${scores.length} scores below ${score})`);
-  return percentile;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -102,13 +123,17 @@ serve(async (req) => {
       }
     }
 
-    const efiScore = predictEFI(input);
-    const percentile = await computePercentile(efiScore);
+    // Load distribution (cached after first call)
+    const distribution = await loadDistribution();
 
-    console.log("Predicted EFI score:", efiScore, "Percentile:", percentile);
+    const efiScore = predictEFI(input);
+    const percentile = computePercentile(efiScore, distribution);
+    const condition = getCondition(efiScore);
+
+    console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`);
 
     return new Response(
-      JSON.stringify({ efi_score: efiScore, percentile }),
+      JSON.stringify({ efi_score: efiScore, percentile, condition }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error: unknown) {
