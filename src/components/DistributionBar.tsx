@@ -1,21 +1,8 @@
 interface DistributionBarProps {
-  score: number;
+  percentile: number;
 }
 
-export const DistributionBar = ({ score }: DistributionBarProps) => {
-  const getPercentile = (value: number) => {
-    // Simulated percentile based on score
-    if (value >= 90) return 95;
-    if (value >= 80) return 85;
-    if (value >= 70) return 70;
-    if (value >= 60) return 55;
-    if (value >= 50) return 40;
-    if (value >= 40) return 25;
-    return 10;
-  };
-
-  const percentile = getPercentile(score);
-
+export const DistributionBar = ({ percentile }: DistributionBarProps) => {
   return (
     <div className="w-full space-y-3">
       <div className="flex justify-between text-sm text-muted-foreground">
@@ -35,7 +22,7 @@ export const DistributionBar = ({ score }: DistributionBarProps) => {
         {/* Marker for user's position */}
         <div 
           className="absolute top-0 h-full w-1 bg-foreground shadow-lg transition-all duration-1000"
-          style={{ left: `${score}%` }}
+          style={{ left: `${percentile}%` }}
         >
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
             <span className="text-xs font-semibold bg-foreground text-background px-2 py-1 rounded">
@@ -50,6 +37,10 @@ export const DistributionBar = ({ score }: DistributionBarProps) => {
         <span>50%</span>
         <span>100%</span>
       </div>
+
+      <p className="text-sm text-center text-muted-foreground">
+        Your vehicle performs better than <span className="font-semibold text-foreground">{percentile}%</span> of engines analyzed.
+      </p>
     </div>
   );
 };

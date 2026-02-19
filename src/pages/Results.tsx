@@ -23,7 +23,7 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score: rawScore, input } = (location.state as { score: number; input: EmissionInput }) || {};
+  const { score: rawScore, percentile: rawPercentile, input } = (location.state as { score: number; percentile: number; input: EmissionInput }) || {};
 
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
@@ -61,7 +61,7 @@ const Results = () => {
   };
 
   const status = getStatusInfo(score);
-  const percentile = score >= 90 ? 5 : score >= 70 ? 15 : score >= 50 ? 35 : 60;
+  const percentile = rawPercentile ?? 50;
 
   const generatePDF = () => {
     const pdf = new jsPDF();
@@ -88,7 +88,7 @@ const Results = () => {
     pdf.setFontSize(14);
     pdf.setTextColor(100, 100, 100);
     pdf.text(`Status: ${status.label}`, 20, 95);
-    pdf.text(`Top ${percentile}% of engines analyzed`, 20, 105);
+    pdf.text(`Performs better than ${percentile}% of engines analyzed`, 20, 105);
 
     // Input values
     pdf.setTextColor(33, 33, 33);
@@ -181,15 +181,15 @@ const Results = () => {
           {/* Percentile */}
           <div className="text-center mb-8">
             <p className="text-lg text-foreground">
-              Your vehicle is in the{" "}
-              <span className="font-bold text-primary">top {percentile}%</span>
+              Your vehicle performs better than{" "}
+              <span className="font-bold text-primary">{percentile}%</span>
               {" "}of engines analyzed
             </p>
           </div>
 
           {/* Distribution */}
           <div className="mb-8">
-            <DistributionBar score={score} />
+            <DistributionBar percentile={percentile} />
           </div>
 
           {/* Actions */}

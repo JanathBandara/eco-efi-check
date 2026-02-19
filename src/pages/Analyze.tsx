@@ -70,6 +70,7 @@ const Analyze = () => {
       if (error) throw error;
 
       const efiScore = data.efi_score;
+      const percentile = data.percentile ?? 50;
 
       // Store in database
       const { error: insertError } = await supabase
@@ -82,10 +83,11 @@ const Analyze = () => {
 
       if (insertError) throw insertError;
 
-      // Navigate to results with the score and input
+      // Navigate to results with the score, percentile, and input
       navigate("/results", { 
         state: { 
           score: efiScore, 
+          percentile,
           input 
         } 
       });
