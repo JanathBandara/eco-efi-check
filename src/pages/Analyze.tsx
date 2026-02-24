@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmissionInput, emissionFields } from "@/components/EmissionInput";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Leaf, ArrowLeft, Loader2, Beaker, LogOut } from "lucide-react";
+import { Leaf, ArrowLeft, Loader2, Beaker, LogOut, Car, Info } from "lucide-react";
 
 type EmissionValues = Record<string, string>;
+
+const VEHICLE_BRANDS = [
+  "Toyota", "Honda", "Nissan", "Mazda", "Suzuki", "Mitsubishi", "Subaru",
+  "Ford", "Chevrolet", "BMW", "Mercedes-Benz", "Audi", "Volkswagen",
+  "Hyundai", "Kia", "Peugeot", "Renault", "Fiat", "Volvo", "Jeep",
+  "Land Rover", "Lexus", "Porsche", "Tesla", "Isuzu", "Daihatsu",
+  "Tata", "Mahindra", "Proton", "Perodua", "Other",
+];
 
 const Analyze = () => {
   const navigate = useNavigate();
@@ -17,6 +28,9 @@ const Analyze = () => {
   const [values, setValues] = useState<EmissionValues>(
     emissionFields.reduce((acc, field) => ({ ...acc, [field.id]: "" }), {})
   );
+  const [vehicleBrand, setVehicleBrand] = useState("");
+  const [vehicleModel, setVehicleModel] = useState("");
+  const [vehicleYear, setVehicleYear] = useState("");
 
   const handleChange = (id: string, value: string) => {
     setValues(prev => ({ ...prev, [id]: value }));
@@ -73,6 +87,13 @@ const Analyze = () => {
       const percentile = data.percentile ?? 50;
       const condition = data.condition ?? "Moderate";
 
+      // Build vehicle info object (only include non-empty values)
+      const vehicleInfo = {
+        ...(vehicleBrand ? { vehicle_brand: vehicleBrand } : {}),
+        ...(vehicleModel.trim() ? { vehicle_model: vehicleModel.trim() } : {}),
+        ...(vehicleYear ? { vehicle_year: parseInt(vehicleYear) } : {}),
+      };
+
       // Store in database
       const { error: insertError } = await supabase
         .from("efi_records")
@@ -80,6 +101,7 @@ const Analyze = () => {
           input: input,
           efi_score: efiScore,
           user_id: session?.user?.id,
+          ...vehicleInfo,
         });
 
       if (insertError) throw insertError;
@@ -90,7 +112,10 @@ const Analyze = () => {
           score: efiScore, 
           percentile,
           condition,
-          input 
+          input,
+          vehicleBrand: vehicleBrand || undefined,
+          vehicleModel: vehicleModel.trim() || undefined,
+          vehicleYear: vehicleYear ? parseInt(vehicleYear) : undefined,
         } 
       });
 
@@ -146,6 +171,63 @@ const Analyze = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Vehicle Information (Optional) */}
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                  <Car className="h-4 w-4" />
+                </span>
+                Vehicle Information
+                <span className="text-xs font-normal text-muted-foreground ml-1">(Optional)</span>
+              </h2>
+              <div className="flex items-start gap-2 mb-4 p-3 rounded-lg bg-muted/40 border border-border/50">
+                <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  Vehicle details help you identify your records in history and may be used to improve our analysis model in the future. This information is optional.
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle_brand" className="text-sm font-medium text-foreground">Brand</Label>
+                  <Select value={vehicleBrand} onValueChange={setVehicleBrand}>
+                    <SelectTrigger className="h-11 rounded-lg border-border bg-card">
+                      <SelectValue placeholder="Select brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VEHICLE_BRANDS.map(brand => (
+                        <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle_model" className="text-sm font-medium text-foreground">Model</Label>
+                  <Input
+                    id="vehicle_model"
+                    type="text"
+                    value={vehicleModel}
+                    onChange={(e) => setVehicleModel(e.target.value)}
+                    placeholder="e.g. Corolla"
+                    maxLength={50}
+                    className="h-11 rounded-lg border-border bg-card"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle_year" className="text-sm font-medium text-foreground">Year</Label>
+                  <Input
+                    id="vehicle_year"
+                    type="number"
+                    value={vehicleYear}
+                    onChange={(e) => setVehicleYear(e.target.value)}
+                    placeholder="e.g. 2020"
+                    min={1950}
+                    max={new Date().getFullYear() + 1}
+                    className="h-11 rounded-lg border-border bg-card"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Acceleration readings */}
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">

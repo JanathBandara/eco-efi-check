@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut } from "lucide-react";
+import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car } from "lucide-react";
 import { format } from "date-fns";
 
 interface EFIRecord {
@@ -12,6 +12,9 @@ interface EFIRecord {
   efi_score: number;
   created_at: string;
   input: Record<string, number>;
+  vehicle_brand: string | null;
+  vehicle_model: string | null;
+  vehicle_year: number | null;
 }
 
 const History = () => {
@@ -112,14 +115,26 @@ const History = () => {
                       <p className="font-medium text-foreground">
                         EFI Score: {record.efi_score}%
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      {(record.vehicle_brand || record.vehicle_model || record.vehicle_year) && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Car className="h-3 w-3" />
+                          {[record.vehicle_brand, record.vehicle_model, record.vehicle_year].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
                         {format(new Date(record.created_at), "PPp")}
                       </p>
                     </div>
                   </div>
                   <Link 
                     to="/results" 
-                    state={{ score: record.efi_score, input: record.input }}
+                    state={{ 
+                      score: record.efi_score, 
+                      input: record.input,
+                      vehicleBrand: record.vehicle_brand,
+                      vehicleModel: record.vehicle_model,
+                      vehicleYear: record.vehicle_year,
+                    }}
                   >
                     <Button variant="ghost" size="sm">
                       View Details
