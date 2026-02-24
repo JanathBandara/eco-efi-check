@@ -21,6 +21,9 @@ export type Database = {
           id: string
           input: Json
           user_id: string
+          vehicle_brand: string | null
+          vehicle_model: string | null
+          vehicle_year: number | null
         }
         Insert: {
           created_at?: string
@@ -28,6 +31,9 @@ export type Database = {
           id?: string
           input: Json
           user_id: string
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: number | null
         }
         Update: {
           created_at?: string
@@ -35,6 +41,9 @@ export type Database = {
           id?: string
           input?: Json
           user_id?: string
+          vehicle_brand?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: number | null
         }
         Relationships: []
       }

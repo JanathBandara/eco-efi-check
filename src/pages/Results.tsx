@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { EFIGauge } from "@/components/EFIGauge";
 import { DistributionBar } from "@/components/DistributionBar";
 import { HeroBackground } from "@/components/HeroBackground";
-import { Leaf, Download, ArrowLeft, RefreshCw, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { Leaf, Download, ArrowLeft, RefreshCw, CheckCircle, AlertTriangle, XCircle, Car } from "lucide-react";
 import jsPDF from "jspdf";
 
 interface EmissionInput {
@@ -23,7 +23,7 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput }) || {};
+  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number }) || {};
 
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
@@ -90,10 +90,20 @@ const Results = () => {
     pdf.text(`Status: ${status.label}`, 20, 95);
     pdf.text(`Performs better than ${percentile}% of engines analyzed`, 20, 105);
 
+    // Vehicle info in PDF
+    let yOffset = 115;
+    if (vehicleBrand || vehicleModel || vehicleYear) {
+      pdf.setFontSize(12);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(`Vehicle: ${[vehicleBrand, vehicleModel, vehicleYear].filter(Boolean).join(" · ")}`, 20, yOffset);
+      yOffset += 15;
+    }
+
     // Input values
     pdf.setTextColor(33, 33, 33);
     pdf.setFontSize(14);
-    pdf.text("Emission Test Readings", 20, 125);
+    pdf.text("Emission Test Readings", 20, yOffset);
+    yOffset += 15;
     
     pdf.setFontSize(10);
     pdf.setTextColor(80, 80, 80);
@@ -117,11 +127,11 @@ const Results = () => {
     ];
 
     leftCol.forEach((text, i) => {
-      pdf.text(text, 20, 140 + i * 8);
+      pdf.text(text, 20, yOffset + i * 8);
     });
     
     rightCol.forEach((text, i) => {
-      pdf.text(text, 110, 140 + i * 8);
+      pdf.text(text, 110, yOffset + i * 8);
     });
 
     // Footer
@@ -156,11 +166,20 @@ const Results = () => {
 
         {/* Results Card */}
         <div className="bg-card rounded-3xl shadow-card border border-border/50 p-6 md:p-10 animate-scale-in">
-          <h1 className="text-2xl font-bold text-foreground text-center mb-8">
+          <h1 className="text-2xl font-bold text-foreground text-center mb-2">
             Your EFI Results
           </h1>
-
-          {/* Gauge */}
+          
+          {/* Vehicle Info Banner */}
+          {(vehicleBrand || vehicleModel || vehicleYear) && (
+            <div className="flex items-center justify-center gap-2 mb-8 text-sm text-muted-foreground">
+              <Car className="h-4 w-4" />
+              <span>
+                {[vehicleBrand, vehicleModel, vehicleYear].filter(Boolean).join(" · ")}
+              </span>
+            </div>
+          )}
+          {!vehicleBrand && !vehicleModel && !vehicleYear && <div className="mb-8" />}
           <div className="flex justify-center mb-8">
             <EFIGauge score={score} />
           </div>
