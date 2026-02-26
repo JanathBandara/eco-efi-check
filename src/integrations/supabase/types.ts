@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           efi_score: number
+          fuel_system: string | null
           id: string
           input: Json
           user_id: string
@@ -28,6 +29,7 @@ export type Database = {
         Insert: {
           created_at?: string
           efi_score: number
+          fuel_system?: string | null
           id?: string
           input: Json
           user_id: string
@@ -38,6 +40,7 @@ export type Database = {
         Update: {
           created_at?: string
           efi_score?: number
+          fuel_system?: string | null
           id?: string
           input?: Json
           user_id?: string

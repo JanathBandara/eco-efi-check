@@ -1,0 +1,1 @@
+ALTER TABLE public.efi_records ADD COLUMN fuel_system TEXT;
