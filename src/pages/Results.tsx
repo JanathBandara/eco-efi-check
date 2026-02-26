@@ -23,7 +23,7 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number }) || {};
+  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear, fuelSystem } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number; fuelSystem?: string }) || {};
 
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
@@ -171,15 +171,15 @@ const Results = () => {
           </h1>
           
           {/* Vehicle Info Banner */}
-          {(vehicleBrand || vehicleModel || vehicleYear) && (
+          {(vehicleBrand || vehicleModel || vehicleYear || fuelSystem) && (
             <div className="flex items-center justify-center gap-2 mb-8 text-sm text-muted-foreground">
               <Car className="h-4 w-4" />
               <span>
-                {[vehicleBrand, vehicleModel, vehicleYear].filter(Boolean).join(" · ")}
+                {[vehicleBrand, vehicleModel, vehicleYear, fuelSystem].filter(Boolean).join(" · ")}
               </span>
             </div>
           )}
-          {!vehicleBrand && !vehicleModel && !vehicleYear && <div className="mb-8" />}
+          {!vehicleBrand && !vehicleModel && !vehicleYear && !fuelSystem && <div className="mb-8" />}
           <div className="flex justify-center mb-8">
             <EFIGauge score={score} />
           </div>

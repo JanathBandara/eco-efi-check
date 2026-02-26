@@ -15,6 +15,7 @@ interface EFIRecord {
   vehicle_brand: string | null;
   vehicle_model: string | null;
   vehicle_year: number | null;
+  fuel_system: string | null;
 }
 
 const History = () => {
@@ -121,6 +122,11 @@ const History = () => {
                           {[record.vehicle_brand, record.vehicle_model, record.vehicle_year].filter(Boolean).join(" · ")}
                         </p>
                       )}
+                      {record.fuel_system && (
+                        <p className="text-xs text-muted-foreground">
+                          Fuel: {record.fuel_system}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(record.created_at), "PPp")}
                       </p>
@@ -134,6 +140,7 @@ const History = () => {
                       vehicleBrand: record.vehicle_brand,
                       vehicleModel: record.vehicle_model,
                       vehicleYear: record.vehicle_year,
+                      fuelSystem: record.fuel_system,
                     }}
                   >
                     <Button variant="ghost" size="sm">

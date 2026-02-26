@@ -9,7 +9,7 @@ import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Leaf, ArrowLeft, Loader2, Beaker, LogOut, Car, Info } from "lucide-react";
+import { Leaf, ArrowLeft, Loader2, Beaker, LogOut, Car, Info, Fuel } from "lucide-react";
 
 type EmissionValues = Record<string, string>;
 
@@ -31,12 +31,17 @@ const Analyze = () => {
   const [vehicleBrand, setVehicleBrand] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
+  const [fuelSystem, setFuelSystem] = useState("");
 
   const handleChange = (id: string, value: string) => {
     setValues(prev => ({ ...prev, [id]: value }));
   };
 
   const validateForm = () => {
+    if (!fuelSystem) {
+      toast.error("Please select a fuel system type");
+      return false;
+    }
     for (const field of emissionFields) {
       const value = values[field.id];
       if (!value || value.trim() === "") {
@@ -92,6 +97,7 @@ const Analyze = () => {
         ...(vehicleBrand ? { vehicle_brand: vehicleBrand } : {}),
         ...(vehicleModel.trim() ? { vehicle_model: vehicleModel.trim() } : {}),
         ...(vehicleYear ? { vehicle_year: parseInt(vehicleYear) } : {}),
+        fuel_system: fuelSystem,
       };
 
       // Store in database
@@ -116,6 +122,7 @@ const Analyze = () => {
           vehicleBrand: vehicleBrand || undefined,
           vehicleModel: vehicleModel.trim() || undefined,
           vehicleYear: vehicleYear ? parseInt(vehicleYear) : undefined,
+          fuelSystem,
         } 
       });
 
@@ -171,6 +178,43 @@ const Analyze = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Fuel System (Mandatory) */}
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full gradient-eco flex items-center justify-center text-primary-foreground text-sm">
+                  <Fuel className="h-4 w-4" />
+                </span>
+                Fuel System
+                <span className="text-xs font-normal text-destructive ml-1">*Required</span>
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFuelSystem("Carbureted")}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    fuelSystem === "Carbureted"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <p className="font-medium text-foreground">Carbureted</p>
+                  <p className="text-xs text-muted-foreground mt-1">Traditional carburetor fuel system</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFuelSystem("EFI")}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    fuelSystem === "EFI"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <p className="font-medium text-foreground">EFI</p>
+                  <p className="text-xs text-muted-foreground mt-1">Electronic Fuel Injection</p>
+                </button>
+              </div>
+            </div>
+
             {/* Vehicle Information (Optional) */}
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
