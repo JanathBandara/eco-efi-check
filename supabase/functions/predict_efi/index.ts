@@ -77,8 +77,8 @@ function computePercentile(score: number, distribution: number[]): number {
 }
 
 function getCondition(score: number): string {
-  if (score >= 70) return "Good";
-  if (score >= 40) return "Moderate";
+  if (score >= 73) return "Good";
+  if (score >= 50) return "Moderate";
   return "Poor";
 }
 
