@@ -83,7 +83,7 @@ const Analyze = () => {
 
       // Call edge function
       const { data, error } = await supabase.functions.invoke("predict_efi", {
-        body: input,
+        body: { ...input, fuel_system: fuelSystem },
       });
 
       if (error) throw error;
@@ -91,6 +91,7 @@ const Analyze = () => {
       const efiScore = data.efi_score;
       const percentile = data.percentile ?? 50;
       const condition = data.condition ?? "Moderate";
+      const aiInsight = data.ai_insight ?? null;
 
       // Build vehicle info object (only include non-empty values)
       const vehicleInfo = {
@@ -123,6 +124,7 @@ const Analyze = () => {
           vehicleModel: vehicleModel.trim() || undefined,
           vehicleYear: vehicleYear ? parseInt(vehicleYear) : undefined,
           fuelSystem,
+          aiInsight,
         } 
       });
 
