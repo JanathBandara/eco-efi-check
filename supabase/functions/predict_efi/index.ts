@@ -82,6 +82,23 @@ function getCondition(score: number): string {
   return "Poor";
 }
 
+function computeDiagnosticFlags(input: EmissionInput) {
+  const avgHC = (input.acc_hc + input.idle_hc) / 2;
+  const avgCO = (input.acc_co + input.idle_co) / 2;
+  const avgO2 = (input.acc_o2 + input.idle_o2) / 2;
+  const avgLambda = (input.acc_lambda + input.idle_lambda) / 2;
+
+  const mixture_state = avgLambda < 1.00 ? "Rich" : avgLambda <= 1.12 ? "Balanced" : "Lean";
+
+  const combustion_quality = avgHC < 75 ? "Efficient Combustion" : avgHC <= 170 ? "Moderate Combustion Efficiency" : "Incomplete Combustion";
+
+  const fuel_burn_efficiency = avgCO < 0.2 ? "Clean Fuel Burn" : avgCO <= 0.55 ? "Moderate Fuel Efficiency" : "Excess Fuel / Inefficient Burn";
+
+  const oxygen_balance = avgO2 < 2 ? "Normal Oxygen Level" : avgO2 <= 4 ? "Elevated Oxygen" : "Excess Oxygen (Lean Mixture Indicator)";
+
+  return { mixture_state, combustion_quality, fuel_burn_efficiency, oxygen_balance };
+}
+
 function traverseTree(node: TreeNode, features: number[]): number {
   if (node.t === "l") {
     return node.v!;
@@ -129,11 +146,12 @@ serve(async (req) => {
     const efiScore = predictEFI(input);
     const percentile = computePercentile(efiScore, distribution);
     const condition = getCondition(efiScore);
+    const diagnostic_flags = computeDiagnosticFlags(input);
 
-    console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`);
+    console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`, diagnostic_flags);
 
     return new Response(
-      JSON.stringify({ efi_score: efiScore, percentile, condition }),
+      JSON.stringify({ efi_score: efiScore, percentile, condition, diagnostic_flags }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error: unknown) {
