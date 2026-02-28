@@ -124,14 +124,89 @@ function predictEFI(input: EmissionInput): number {
   return Math.max(1, Math.min(100, Math.round(raw)));
 }
 
+async function generateAIInsight(
+  efiScore: number,
+  percentile: number,
+  condition: string,
+  fuelSystem: string,
+  diagnosticFlags: ReturnType<typeof computeDiagnosticFlags>
+): Promise<Record<string, unknown> | null> {
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY not configured");
+    return null;
+  }
+
+  const systemPrompt = `You are an automotive emission diagnostic assistant.
+
+You must:
+- Use only the provided diagnostic flags.
+- Explain the engine condition in simple terms.
+- Provide safe maintenance suggestions.
+- Distinguish between Carbureted and EFI engines.
+- Avoid advanced mechanical instructions.
+- Output valid JSON with exactly these keys: summary, likely_causes, recommended_actions, maintenance_tips
+- summary: a 2-3 sentence plain-language explanation
+- likely_causes: array of 2-4 short strings
+- recommended_actions: array of 2-4 short strings
+- maintenance_tips: array of 2-3 short strings
+- Do not invent issues not supported by the flags.
+- Do not wrap output in markdown code blocks. Return raw JSON only.`;
+
+  const userPayload = JSON.stringify({
+    efi_score: efiScore,
+    percentile,
+    condition,
+    engine_type: fuelSystem,
+    diagnostic_flags: diagnosticFlags,
+  });
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            { role: "user", parts: [{ text: `${systemPrompt}\n\nAnalyze this vehicle data:\n${userPayload}` }] },
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 512,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Gemini API error:", response.status, errText);
+      return null;
+    }
+
+    const result = await response.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) return null;
+
+    // Strip markdown fences if present
+    const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+    return JSON.parse(cleaned);
+  } catch (err) {
+    console.error("AI insight generation failed:", err);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const input: EmissionInput = await req.json();
-    console.log("Received emission data:", input);
+    const body = await req.json();
+    const { fuel_system, ...input } = body as EmissionInput & { fuel_system?: string };
+    console.log("Received emission data:", input, "fuel_system:", fuel_system);
 
     const requiredFields = FEATURE_KEYS;
     for (const field of requiredFields) {
@@ -150,8 +225,11 @@ serve(async (req) => {
 
     console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`, diagnostic_flags);
 
+    // Generate AI insight (non-blocking graceful failure)
+    const ai_insight = await generateAIInsight(efiScore, percentile, condition, fuel_system || "Unknown", diagnostic_flags);
+
     return new Response(
-      JSON.stringify({ efi_score: efiScore, percentile, condition, diagnostic_flags }),
+      JSON.stringify({ efi_score: efiScore, percentile, condition, diagnostic_flags, ai_insight }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error: unknown) {

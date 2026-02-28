@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { EFIGauge } from "@/components/EFIGauge";
 import { DistributionBar } from "@/components/DistributionBar";
 import { HeroBackground } from "@/components/HeroBackground";
+import { AIInsightCard } from "@/components/AIInsightCard";
 import { Leaf, Download, ArrowLeft, RefreshCw, CheckCircle, AlertTriangle, XCircle, Car } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -23,7 +24,7 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear, fuelSystem } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number; fuelSystem?: string }) || {};
+  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear, fuelSystem, aiInsight } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number; fuelSystem?: string; aiInsight?: { summary: string; likely_causes: string[]; recommended_actions: string[]; maintenance_tips: string[] } }) || {};
 
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
@@ -210,6 +211,13 @@ const Results = () => {
           <div className="mb-8">
             <DistributionBar percentile={percentile} />
           </div>
+
+          {/* AI Insight */}
+          {aiInsight && (
+            <div className="mb-8">
+              <AIInsightCard insight={aiInsight} />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
