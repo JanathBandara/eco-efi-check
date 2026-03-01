@@ -182,19 +182,42 @@ You must:
     if (!response.ok) {
       const errText = await response.text();
       console.error("Gemini API error:", response.status, errText);
-      return null;
+      return { ai_error: `Gemini API ${response.status}: ${errText.substring(0, 300)}` };
     }
 
     const result = await response.json();
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) return null;
+    console.log("Gemini Raw Response:", text);
+    if (!text) return { ai_error: "Empty response from Gemini API" };
 
     // Strip markdown fences if present
-    const cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
-    return JSON.parse(cleaned);
+    let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+
+    // Find JSON boundaries
+    const jsonStart = cleaned.search(/[\{\[]/);
+    const jsonEnd = cleaned.lastIndexOf(jsonStart !== -1 && cleaned[jsonStart] === '[' ? ']' : '}');
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+
+    try {
+      return JSON.parse(cleaned);
+    } catch (parseErr) {
+      // Fix common issues
+      cleaned = cleaned
+        .replace(/,\s*}/g, "}")
+        .replace(/,\s*]/g, "]")
+        .replace(/[\x00-\x1F\x7F]/g, "");
+      try {
+        return JSON.parse(cleaned);
+      } catch (finalErr) {
+        console.error("JSON parse failed:", finalErr, "Cleaned text:", cleaned);
+        return { ai_error: `JSON parse failed: ${finalErr.message}` };
+      }
+    }
   } catch (err) {
     console.error("AI insight generation failed:", err);
-    return null;
+    return { ai_error: err.message || String(err) };
   }
 }
 
