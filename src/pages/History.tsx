@@ -16,6 +16,9 @@ interface EFIRecord {
   vehicle_model: string | null;
   vehicle_year: number | null;
   fuel_system: string | null;
+  percentile: number | null;
+  condition: string | null;
+  ai_insight: Record<string, unknown> | null;
 }
 
 const History = () => {
@@ -136,11 +139,14 @@ const History = () => {
                     to="/results" 
                     state={{ 
                       score: record.efi_score, 
+                      percentile: record.percentile,
+                      condition: record.condition,
                       input: record.input,
                       vehicleBrand: record.vehicle_brand,
                       vehicleModel: record.vehicle_model,
                       vehicleYear: record.vehicle_year,
                       fuelSystem: record.fuel_system,
+                      aiInsight: record.ai_insight,
                     }}
                   >
                     <Button variant="ghost" size="sm">

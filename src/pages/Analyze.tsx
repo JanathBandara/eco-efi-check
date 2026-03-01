@@ -108,6 +108,9 @@ const Analyze = () => {
           input: input,
           efi_score: efiScore,
           user_id: session?.user?.id,
+          percentile,
+          condition,
+          ai_insight: aiInsight,
           ...vehicleInfo,
         });
 

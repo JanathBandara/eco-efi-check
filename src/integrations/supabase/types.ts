@@ -16,33 +16,42 @@ export type Database = {
     Tables: {
       efi_records: {
         Row: {
+          ai_insight: Json | null
+          condition: string | null
           created_at: string
           efi_score: number
           fuel_system: string | null
           id: string
           input: Json
+          percentile: number | null
           user_id: string
           vehicle_brand: string | null
           vehicle_model: string | null
           vehicle_year: number | null
         }
         Insert: {
+          ai_insight?: Json | null
+          condition?: string | null
           created_at?: string
           efi_score: number
           fuel_system?: string | null
           id?: string
           input: Json
+          percentile?: number | null
           user_id: string
           vehicle_brand?: string | null
           vehicle_model?: string | null
           vehicle_year?: number | null
         }
         Update: {
+          ai_insight?: Json | null
+          condition?: string | null
           created_at?: string
           efi_score?: number
           fuel_system?: string | null
           id?: string
           input?: Json
+          percentile?: number | null
           user_id?: string
           vehicle_brand?: string | null
           vehicle_model?: string | null
