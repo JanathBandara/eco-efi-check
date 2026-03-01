@@ -131,10 +131,10 @@ async function generateAIInsight(
   fuelSystem: string,
   diagnosticFlags: ReturnType<typeof computeDiagnosticFlags>
 ): Promise<Record<string, unknown> | null> {
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) {
-    console.error("GEMINI_API_KEY not configured");
-    return null;
+    console.error("GROQ_API_KEY not configured");
+    return { ai_error: "GROQ_API_KEY not configured" };
   }
 
   const systemPrompt = `You are an automotive emission diagnostic assistant.
@@ -151,7 +151,7 @@ You must:
 - recommended_actions: array of 2-4 short strings
 - maintenance_tips: array of 2-3 short strings
 - Do not invent issues not supported by the flags.
-- Do not wrap output in markdown code blocks. Return raw JSON only.`;
+- Return raw JSON only. No markdown, no code blocks.`;
 
   const userPayload = JSON.stringify({
     efi_score: efiScore,
@@ -163,32 +163,36 @@ You must:
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
         body: JSON.stringify({
-          contents: [
-            { role: "user", parts: [{ text: `${systemPrompt}\n\nAnalyze this vehicle data:\n${userPayload}` }] },
+          model: "llama3-8b-8192",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Analyze this vehicle data:\n${userPayload}` },
           ],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 512,
-          },
+          temperature: 0.3,
+          max_tokens: 512,
+          response_format: { type: "json_object" },
         }),
       }
     );
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Gemini API error:", response.status, errText);
-      return { ai_error: `Gemini API ${response.status}: ${errText.substring(0, 300)}` };
+      console.error("Groq API error:", response.status, errText);
+      return { ai_error: `Groq API ${response.status}: ${errText.substring(0, 300)}` };
     }
 
     const result = await response.json();
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    console.log("Gemini Raw Response:", text);
-    if (!text) return { ai_error: "Empty response from Gemini API" };
+    const text = result.choices?.[0]?.message?.content;
+    console.log("Groq Raw Response:", text);
+    if (!text) return { ai_error: "Empty response from Groq API" };
 
     // Strip markdown fences if present
     let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
