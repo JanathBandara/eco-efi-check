@@ -24,7 +24,7 @@ interface EmissionInput {
 
 const Results = () => {
   const location = useLocation();
-  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear, fuelSystem, aiInsight } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number; fuelSystem?: string; aiInsight?: { summary: string; likely_causes: string[]; recommended_actions: string[]; maintenance_tips: string[] } }) || {};
+  const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear, fuelSystem, aiInsight } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number; fuelSystem?: string; aiInsight?: { summary: string; likely_causes: string[]; recommended_actions: string[]; maintenance_tips: string[]; ai_error?: string } }) || {};
 
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
@@ -213,9 +213,15 @@ const Results = () => {
           </div>
 
           {/* AI Insight */}
-          {aiInsight && (
+          {aiInsight && !aiInsight.ai_error && (
             <div className="mb-8">
               <AIInsightCard insight={aiInsight} />
+            </div>
+          )}
+          {aiInsight?.ai_error && (
+            <div className="mb-8 rounded-2xl border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
+              <p className="font-semibold">AI Insight Error (debug):</p>
+              <p className="mt-1 break-all">{aiInsight.ai_error}</p>
             </div>
           )}
 

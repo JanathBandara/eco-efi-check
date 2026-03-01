@@ -92,6 +92,12 @@ const Analyze = () => {
       const percentile = data.percentile ?? 50;
       const condition = data.condition ?? "Moderate";
       const aiInsight = data.ai_insight ?? null;
+      const aiError = data.ai_insight?.ai_error ?? null;
+
+      if (aiError) {
+        console.warn("AI Insight error from backend:", aiError);
+        toast.warning(`AI Insight unavailable: ${aiError}`);
+      }
 
       // Build vehicle info object (only include non-empty values)
       const vehicleInfo = {
