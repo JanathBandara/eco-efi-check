@@ -135,7 +135,76 @@ const Results = () => {
       pdf.text(text, 110, yOffset + i * 8);
     });
 
-    // Footer
+    yOffset += leftCol.length * 8 + 10;
+
+    // AI Insight section
+    if (aiInsight && !aiInsight.ai_error) {
+      pdf.setFontSize(14);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text("AI Diagnostic Insight", 20, yOffset);
+      yOffset += 10;
+
+      // Summary
+      pdf.setFontSize(10);
+      pdf.setTextColor(80, 80, 80);
+      const summaryLines = pdf.splitTextToSize(`Summary: ${aiInsight.summary}`, 170);
+      pdf.text(summaryLines, 20, yOffset);
+      yOffset += summaryLines.length * 5 + 5;
+
+      // Likely Causes
+      if (aiInsight.likely_causes?.length) {
+        pdf.setFontSize(11);
+        pdf.setTextColor(33, 33, 33);
+        pdf.text("Likely Causes:", 20, yOffset);
+        yOffset += 6;
+        pdf.setFontSize(10);
+        pdf.setTextColor(80, 80, 80);
+        aiInsight.likely_causes.forEach((cause) => {
+          if (yOffset > 270) { pdf.addPage(); yOffset = 20; }
+          const lines = pdf.splitTextToSize(`• ${cause}`, 165);
+          pdf.text(lines, 25, yOffset);
+          yOffset += lines.length * 5 + 2;
+        });
+        yOffset += 3;
+      }
+
+      // Recommended Actions
+      if (aiInsight.recommended_actions?.length) {
+        if (yOffset > 260) { pdf.addPage(); yOffset = 20; }
+        pdf.setFontSize(11);
+        pdf.setTextColor(33, 33, 33);
+        pdf.text("Recommended Actions:", 20, yOffset);
+        yOffset += 6;
+        pdf.setFontSize(10);
+        pdf.setTextColor(80, 80, 80);
+        aiInsight.recommended_actions.forEach((action) => {
+          if (yOffset > 270) { pdf.addPage(); yOffset = 20; }
+          const lines = pdf.splitTextToSize(`• ${action}`, 165);
+          pdf.text(lines, 25, yOffset);
+          yOffset += lines.length * 5 + 2;
+        });
+        yOffset += 3;
+      }
+
+      // Maintenance Tips
+      if (aiInsight.maintenance_tips?.length) {
+        if (yOffset > 260) { pdf.addPage(); yOffset = 20; }
+        pdf.setFontSize(11);
+        pdf.setTextColor(33, 33, 33);
+        pdf.text("Maintenance Tips:", 20, yOffset);
+        yOffset += 6;
+        pdf.setFontSize(10);
+        pdf.setTextColor(80, 80, 80);
+        aiInsight.maintenance_tips.forEach((tip) => {
+          if (yOffset > 270) { pdf.addPage(); yOffset = 20; }
+          const lines = pdf.splitTextToSize(`• ${tip}`, 165);
+          pdf.text(lines, 25, yOffset);
+          yOffset += lines.length * 5 + 2;
+        });
+      }
+    }
+
+    // Footer (on last page)
     pdf.setFontSize(9);
     pdf.setTextColor(150, 150, 150);
     pdf.text(`Generated: ${timestamp}`, 20, 280);
