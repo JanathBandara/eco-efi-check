@@ -30,30 +30,40 @@ const History = () => {
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
-    const { error } = await supabase
-      .from("efi_records")
-      .update({ is_deleted: true } as any)
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("efi_records")
+        .update({ is_deleted: true } as any)
+        .eq("id", id);
 
-    if (error) {
-      toast.error("Failed to delete record");
-    } else {
-      setRecords((prev) => prev.filter((r) => r.id !== id));
-      toast.success("Record deleted");
+      if (error) {
+        toast.error("Failed to delete record");
+      } else {
+        setRecords((prev) => prev.filter((r) => r.id !== id));
+        toast.success("Record deleted");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("An unexpected error occurred");
     }
     setDeletingId(null);
   };
 
   useEffect(() => {
     const fetchRecords = async () => {
-      const { data, error } = await supabase
-        .from("efi_records")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
+      try {
+        const { data, error } = await supabase
+          .from("efi_records")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(20);
 
-      if (!error && data) {
-        setRecords(data as EFIRecord[]);
+        if (!error && data) {
+          setRecords(data as EFIRecord[]);
+        }
+      } catch (error) {
+        console.error("Fetch error:", error);
+        toast.error("Failed to load history");
       }
       setIsLoading(false);
     };
