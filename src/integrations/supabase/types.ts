@@ -23,6 +23,7 @@ export type Database = {
           fuel_system: string | null
           id: string
           input: Json
+          is_deleted: boolean
           percentile: number | null
           user_id: string
           vehicle_brand: string | null
@@ -37,6 +38,7 @@ export type Database = {
           fuel_system?: string | null
           id?: string
           input: Json
+          is_deleted?: boolean
           percentile?: number | null
           user_id: string
           vehicle_brand?: string | null
@@ -51,6 +53,7 @@ export type Database = {
           fuel_system?: string | null
           id?: string
           input?: Json
+          is_deleted?: boolean
           percentile?: number | null
           user_id?: string
           vehicle_brand?: string | null
