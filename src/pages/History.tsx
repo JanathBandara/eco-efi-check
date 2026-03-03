@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car } from "lucide-react";
+import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 
 interface EFIRecord {
@@ -25,6 +26,23 @@ const History = () => {
   const { signOut } = useAuth();
   const [records, setRecords] = useState<EFIRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    const { error } = await supabase
+      .from("efi_records")
+      .update({ is_deleted: true } as any)
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to delete record");
+    } else {
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+      toast.success("Record deleted");
+    }
+    setDeletingId(null);
+  };
 
   useEffect(() => {
     const fetchRecords = async () => {
@@ -135,24 +153,39 @@ const History = () => {
                       </p>
                     </div>
                   </div>
-                  <Link 
-                    to="/results" 
-                    state={{ 
-                      score: record.efi_score, 
-                      percentile: record.percentile,
-                      condition: record.condition,
-                      input: record.input,
-                      vehicleBrand: record.vehicle_brand,
-                      vehicleModel: record.vehicle_model,
-                      vehicleYear: record.vehicle_year,
-                      fuelSystem: record.fuel_system,
-                      aiInsight: record.ai_insight,
-                    }}
-                  >
-                    <Button variant="ghost" size="sm">
-                      View Details
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      disabled={deletingId === record.id}
+                      onClick={() => handleDelete(record.id)}
+                    >
+                      {deletingId === record.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
-                  </Link>
+                    <Link 
+                      to="/results" 
+                      state={{ 
+                        score: record.efi_score, 
+                        percentile: record.percentile,
+                        condition: record.condition,
+                        input: record.input,
+                        vehicleBrand: record.vehicle_brand,
+                        vehicleModel: record.vehicle_model,
+                        vehicleYear: record.vehicle_year,
+                        fuelSystem: record.fuel_system,
+                        aiInsight: record.ai_insight,
+                      }}
+                    >
+                      <Button variant="ghost" size="sm">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
