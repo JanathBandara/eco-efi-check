@@ -273,7 +273,11 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error('Error in predict_efi function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Only return safe, known validation messages — not internal details
+    const safeMessages = ['Invalid input data', 'Input values out of acceptable range', 'Invalid fuel system type'];
+    const errorMessage = error instanceof Error && safeMessages.includes(error.message)
+      ? error.message
+      : 'An error occurred processing your request';
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
