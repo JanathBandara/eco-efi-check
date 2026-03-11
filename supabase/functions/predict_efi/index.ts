@@ -216,12 +216,12 @@ You must:
         return JSON.parse(cleaned);
       } catch (finalErr) {
         console.error("JSON parse failed:", finalErr, "Cleaned text:", cleaned);
-        return { ai_error: `JSON parse failed: ${finalErr.message}` };
+        return { ai_error: "AI insight temporarily unavailable" };
       }
     }
   } catch (err) {
     console.error("AI insight generation failed:", err);
-    return { ai_error: err.message || String(err) };
+    return { ai_error: "AI insight temporarily unavailable" };
   }
 }
 
