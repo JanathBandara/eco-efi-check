@@ -1,1 +1,4 @@
 project_id = "etfkmtetqssyeenesavr"
+
+[functions.predict_efi]
+verify_jwt = false
