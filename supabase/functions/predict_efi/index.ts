@@ -186,13 +186,13 @@ You must:
     if (!response.ok) {
       const errText = await response.text();
       console.error("Groq API error:", response.status, errText);
-      return { ai_error: `Groq API ${response.status}: ${errText.substring(0, 300)}` };
+      return { ai_error: "AI insight temporarily unavailable" };
     }
 
     const result = await response.json();
     const text = result.choices?.[0]?.message?.content;
     console.log("Groq Raw Response:", text);
-    if (!text) return { ai_error: "Empty response from Groq API" };
+    if (!text) return { ai_error: "AI insight temporarily unavailable" };
 
     // Strip markdown fences if present
     let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
