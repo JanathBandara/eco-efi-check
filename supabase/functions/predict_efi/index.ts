@@ -134,7 +134,7 @@ async function generateAIInsight(
   const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) {
     console.error("GROQ_API_KEY not configured");
-    return { ai_error: "GROQ_API_KEY not configured" };
+    return { ai_error: "AI insight temporarily unavailable" };
   }
 
   const systemPrompt = `You are an automotive emission diagnostic assistant.
@@ -186,13 +186,13 @@ You must:
     if (!response.ok) {
       const errText = await response.text();
       console.error("Groq API error:", response.status, errText);
-      return { ai_error: `Groq API ${response.status}: ${errText.substring(0, 300)}` };
+      return { ai_error: "AI insight temporarily unavailable" };
     }
 
     const result = await response.json();
     const text = result.choices?.[0]?.message?.content;
     console.log("Groq Raw Response:", text);
-    if (!text) return { ai_error: "Empty response from Groq API" };
+    if (!text) return { ai_error: "AI insight temporarily unavailable" };
 
     // Strip markdown fences if present
     let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
@@ -216,12 +216,12 @@ You must:
         return JSON.parse(cleaned);
       } catch (finalErr) {
         console.error("JSON parse failed:", finalErr, "Cleaned text:", cleaned);
-        return { ai_error: `JSON parse failed: ${finalErr.message}` };
+        return { ai_error: "AI insight temporarily unavailable" };
       }
     }
   } catch (err) {
     console.error("AI insight generation failed:", err);
-    return { ai_error: err.message || String(err) };
+    return { ai_error: "AI insight temporarily unavailable" };
   }
 }
 
@@ -235,10 +235,22 @@ serve(async (req) => {
     const { fuel_system, ...input } = body as EmissionInput & { fuel_system?: string };
     console.log("Received emission data:", input, "fuel_system:", fuel_system);
 
+    // Validate all emission fields: must be finite numbers within realistic bounds
     const requiredFields = FEATURE_KEYS;
     for (const field of requiredFields) {
-      if (typeof input[field] !== 'number') {
-        throw new Error(`Missing or invalid field: ${field}`);
+      const val = input[field];
+      if (typeof val !== 'number' || !isFinite(val)) {
+        throw new Error('Invalid input data');
+      }
+      if (val < 0 || val > 10000) {
+        throw new Error('Input values out of acceptable range');
+      }
+    }
+
+    // Validate fuel_system if provided
+    if (fuel_system !== undefined && fuel_system !== null) {
+      if (typeof fuel_system !== 'string' || !['Carbureted', 'EFI'].includes(fuel_system)) {
+        throw new Error('Invalid fuel system type');
       }
     }
 
@@ -261,7 +273,11 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error('Error in predict_efi function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Only return safe, known validation messages — not internal details
+    const safeMessages = ['Invalid input data', 'Input values out of acceptable range', 'Invalid fuel system type'];
+    const errorMessage = error instanceof Error && safeMessages.includes(error.message)
+      ? error.message
+      : 'An error occurred processing your request';
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

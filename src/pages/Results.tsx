@@ -288,9 +288,8 @@ const Results = () => {
             </div>
           )}
           {aiInsight?.ai_error && (
-            <div className="mb-8 rounded-2xl border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
-              <p className="font-semibold">AI Insight Error (debug):</p>
-              <p className="mt-1 break-all">{aiInsight.ai_error}</p>
+            <div className="mb-8 rounded-2xl border border-border/50 bg-muted/50 p-4 text-sm text-muted-foreground">
+              <p>AI diagnostic insight is temporarily unavailable. Your EFI score and diagnostics are still accurate.</p>
             </div>
           )}
 
