@@ -235,10 +235,22 @@ serve(async (req) => {
     const { fuel_system, ...input } = body as EmissionInput & { fuel_system?: string };
     console.log("Received emission data:", input, "fuel_system:", fuel_system);
 
+    // Validate all emission fields: must be finite numbers within realistic bounds
     const requiredFields = FEATURE_KEYS;
     for (const field of requiredFields) {
-      if (typeof input[field] !== 'number') {
-        throw new Error(`Missing or invalid field: ${field}`);
+      const val = input[field];
+      if (typeof val !== 'number' || !isFinite(val)) {
+        throw new Error('Invalid input data');
+      }
+      if (val < 0 || val > 10000) {
+        throw new Error('Input values out of acceptable range');
+      }
+    }
+
+    // Validate fuel_system if provided
+    if (fuel_system !== undefined && fuel_system !== null) {
+      if (typeof fuel_system !== 'string' || !['Carbureted', 'EFI'].includes(fuel_system)) {
+        throw new Error('Invalid fuel system type');
       }
     }
 
