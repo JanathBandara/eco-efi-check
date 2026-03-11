@@ -134,7 +134,7 @@ async function generateAIInsight(
   const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) {
     console.error("GROQ_API_KEY not configured");
-    return { ai_error: "GROQ_API_KEY not configured" };
+    return { ai_error: "AI insight temporarily unavailable" };
   }
 
   const systemPrompt = `You are an automotive emission diagnostic assistant.
