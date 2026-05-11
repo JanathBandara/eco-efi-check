@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Users can view own EFI records" ON public.efi_records;
+CREATE POLICY "Users can view own EFI records" ON public.efi_records FOR SELECT USING (auth.uid() IS NOT NULL AND auth.uid() = user_id);
