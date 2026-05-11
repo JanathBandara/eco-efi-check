@@ -55,6 +55,7 @@ const History = () => {
         const { data, error } = await supabase
           .from("efi_records")
           .select("*")
+          .eq("is_deleted", false)
           .order("created_at", { ascending: false })
           .limit(20);
 
