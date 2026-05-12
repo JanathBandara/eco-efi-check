@@ -131,9 +131,9 @@ async function generateAIInsight(
   fuelSystem: string,
   diagnosticFlags: ReturnType<typeof computeDiagnosticFlags>
 ): Promise<Record<string, unknown> | null> {
-  const apiKey = Deno.env.get("GROQ_API_KEY");
+  const apiKey = Deno.env.get("GPT_API_KEY");
   if (!apiKey) {
-    console.error("GROQ_API_KEY not configured");
+    console.error("GPT_API_KEY not configured");
     return { ai_error: "AI insight temporarily unavailable" };
   }
 
@@ -163,7 +163,7 @@ You must:
 
   try {
     const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
+      "https://api.openai.com/v1/chat/completions",
       {
         method: "POST",
         headers: {
@@ -171,7 +171,7 @@ You must:
           "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: `Analyze this vehicle data:\n${userPayload}` },
@@ -185,13 +185,13 @@ You must:
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Groq API error:", response.status, errText);
+      console.error("OpenAI API error:", response.status, errText);
       return { ai_error: "AI insight temporarily unavailable" };
     }
 
     const result = await response.json();
     const text = result.choices?.[0]?.message?.content;
-    console.log("Groq Raw Response:", text);
+    console.log("OpenAI Raw Response:", text);
     if (!text) return { ai_error: "AI insight temporarily unavailable" };
 
     // Strip markdown fences if present
