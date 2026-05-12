@@ -131,9 +131,9 @@ async function generateAIInsight(
   fuelSystem: string,
   diagnosticFlags: ReturnType<typeof computeDiagnosticFlags>
 ): Promise<Record<string, unknown> | null> {
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  const apiKey = Deno.env.get("GROQ_API_KEY");
   if (!apiKey) {
-    console.error("GEMINI_API_KEY not configured");
+    console.error("GROQ_API_KEY not configured");
     return { ai_error: "AI insight temporarily unavailable" };
   }
 
@@ -163,32 +163,35 @@ You must:
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ role: "user", parts: [{ text: `Analyze this vehicle data:\n${userPayload}` }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.3,
-          },
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Analyze this vehicle data:\n${userPayload}` },
+          ],
+          temperature: 0.3,
+          max_tokens: 512,
+          response_format: { type: "json_object" },
         }),
       }
     );
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Gemini API error:", response.status, errText);
+      console.error("Groq API error:", response.status, errText);
       return { ai_error: "AI insight temporarily unavailable" };
     }
 
     const result = await response.json();
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    console.log("Gemini Raw Response:", text);
+    const text = result.choices?.[0]?.message?.content;
+    console.log("Groq Raw Response:", text);
     if (!text) return { ai_error: "AI insight temporarily unavailable" };
 
     // Strip markdown fences if present
