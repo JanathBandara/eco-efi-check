@@ -39,7 +39,7 @@ export const DistributionBar = ({ percentile }: DistributionBarProps) => {
       </div>
 
       <p className="text-sm text-center text-muted-foreground">
-        Your vehicle performs better than <span className="font-semibold text-foreground">{percentile}%</span> of engines analyzed.
+        Improving combustion efficiency by preventive maintenance may reduce hydrocarbon and carbon monoxide emissions.
       </p>
     </div>
   );
