@@ -38,9 +38,6 @@ export const DistributionBar = ({ percentile }: DistributionBarProps) => {
         <span>100%</span>
       </div>
 
-      <p className="text-sm text-center text-muted-foreground">
-        Improving combustion efficiency by preventive maintenance may reduce hydrocarbon and carbon monoxide emissions.
-      </p>
     </div>
   );
 };
