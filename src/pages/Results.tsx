@@ -322,6 +322,11 @@ const Results = () => {
           </div>
         </div>
 
+        {/* Environmental Perspective */}
+        <div className="mt-6">
+          <EcoTipCard />
+        </div>
+
         {/* Back link */}
         <div className="text-center mt-8">
           <Link to="/" className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1">
