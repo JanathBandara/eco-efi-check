@@ -93,6 +93,8 @@ const Analyze = () => {
       const condition = data.condition ?? "Moderate";
       const aiInsight = data.ai_insight ?? null;
       const aiError = data.ai_insight?.ai_error ?? null;
+      const coPercentile = data.co_percentile ?? null;
+      const coAverage = data.co_average ?? null;
 
       if (aiError) {
         console.warn("AI Insight error from backend:", aiError);
@@ -134,6 +136,8 @@ const Analyze = () => {
           vehicleYear: vehicleYear ? parseInt(vehicleYear) : undefined,
           fuelSystem,
           aiInsight,
+          coPercentile,
+          coAverage,
         } 
       });
 
