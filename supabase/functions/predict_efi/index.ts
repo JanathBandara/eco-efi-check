@@ -92,11 +92,12 @@ async function loadCoDistribution(): Promise<number[]> {
   const text = await data.text();
   const parsed = JSON.parse(text);
 
-  if (!Array.isArray(parsed) || parsed.length === 0) {
+  const values = Array.isArray(parsed) ? parsed : Object.values(parsed);
+  if (!values || values.length === 0) {
     throw new Error("Invalid CO distribution file format");
   }
 
-  coDistributionScores = parsed.map(Number).sort((a, b) => a - b);
+  coDistributionScores = values.map(Number).filter(n => isFinite(n)).sort((a, b) => a - b);
   console.log(`CO distribution loaded: ${coDistributionScores.length} scores cached`);
   return coDistributionScores;
 }
