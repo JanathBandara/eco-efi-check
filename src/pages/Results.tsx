@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { EFIGauge } from "@/components/EFIGauge";
 import { DistributionBar } from "@/components/DistributionBar";
 import { COEmissionCard } from "@/components/COEmissionCard";
+import { EcoTipCard } from "@/components/EcoTipCard";
 import { HeroBackground } from "@/components/HeroBackground";
 import { AIInsightCard } from "@/components/AIInsightCard";
 import { Leaf, Download, ArrowLeft, RefreshCw, CheckCircle, AlertTriangle, XCircle, Car } from "lucide-react";
@@ -319,6 +320,11 @@ const Results = () => {
               </Button>
             </Link>
           </div>
+        </div>
+
+        {/* Environmental Perspective */}
+        <div className="mt-6">
+          <EcoTipCard />
         </div>
 
         {/* Back link */}
