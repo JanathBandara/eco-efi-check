@@ -39,6 +39,7 @@ const FEATURE_KEYS: (keyof EmissionInput)[] = [
 
 // Cached distribution data - loaded once per cold start
 let distributionScores: number[] | null = null;
+let coDistributionScores: number[] | null = null;
 
 async function loadDistribution(): Promise<number[]> {
   if (distributionScores !== null) {
@@ -68,6 +69,36 @@ async function loadDistribution(): Promise<number[]> {
   distributionScores = parsed.map(Number).sort((a, b) => a - b);
   console.log(`Distribution loaded: ${distributionScores.length} scores cached`);
   return distributionScores;
+}
+
+async function loadCoDistribution(): Promise<number[]> {
+  if (coDistributionScores !== null) {
+    return coDistributionScores;
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const { data, error } = await supabase.storage
+    .from("efi-distribution")
+    .download("co_distribution.json");
+
+  if (error || !data) {
+    console.error("Failed to load CO distribution file:", error);
+    throw new Error("Could not load CO distribution dataset");
+  }
+
+  const text = await data.text();
+  const parsed = JSON.parse(text);
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("Invalid CO distribution file format");
+  }
+
+  coDistributionScores = parsed.map(Number).sort((a, b) => a - b);
+  console.log(`CO distribution loaded: ${coDistributionScores.length} scores cached`);
+  return coDistributionScores;
 }
 
 function computePercentile(score: number, distribution: number[]): number {
@@ -281,11 +312,17 @@ serve(async (req) => {
 
     // Load distribution (cached after first call)
     const distribution = await loadDistribution();
+    const coDistribution = await loadCoDistribution();
 
     const efiScore = predictEFI(input);
     const percentile = computePercentile(efiScore, distribution);
     const condition = getCondition(efiScore);
     const diagnostic_flags = computeDiagnosticFlags(input);
+
+    const avgCo = (input.acc_co + input.idle_co) / 2;
+    const co_percentile = computePercentile(avgCo, coDistribution);
+    const co_average = Math.round(avgCo * 1000) / 1000;
+    console.log(`Avg CO: ${co_average}, CO percentile: ${co_percentile}%`);
 
     console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`, diagnostic_flags);
 
@@ -293,7 +330,7 @@ serve(async (req) => {
     const ai_insight = await generateAIInsight(efiScore, percentile, condition, fuel_system || "Unknown", diagnostic_flags);
 
     return new Response(
-      JSON.stringify({ efi_score: efiScore, percentile, condition, diagnostic_flags, ai_insight }),
+      JSON.stringify({ efi_score: efiScore, percentile, condition, diagnostic_flags, ai_insight, co_percentile, co_average }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error: unknown) {
