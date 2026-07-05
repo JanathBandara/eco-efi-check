@@ -20,6 +20,8 @@ interface EFIRecord {
   percentile: number | null;
   condition: string | null;
   ai_insight: Record<string, unknown> | null;
+  co_percentile: number | null;
+  co_average: number | null;
 }
 
 const History = () => {
@@ -190,6 +192,8 @@ const History = () => {
                         vehicleYear: record.vehicle_year,
                         fuelSystem: record.fuel_system,
                         aiInsight: record.ai_insight,
+                        coPercentile: record.co_percentile,
+                        coAverage: record.co_average,
                       }}
                     >
                       <Button variant="ghost" size="sm">

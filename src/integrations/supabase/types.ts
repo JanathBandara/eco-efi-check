@@ -17,6 +17,8 @@ export type Database = {
       efi_records: {
         Row: {
           ai_insight: Json | null
+          co_average: number | null
+          co_percentile: number | null
           condition: string | null
           created_at: string
           efi_score: number
@@ -32,6 +34,8 @@ export type Database = {
         }
         Insert: {
           ai_insight?: Json | null
+          co_average?: number | null
+          co_percentile?: number | null
           condition?: string | null
           created_at?: string
           efi_score: number
@@ -47,6 +51,8 @@ export type Database = {
         }
         Update: {
           ai_insight?: Json | null
+          co_average?: number | null
+          co_percentile?: number | null
           condition?: string | null
           created_at?: string
           efi_score?: number

@@ -114,7 +114,7 @@ function getCondition(score: number): string {
   return "Poor";
 }
 
-function computeDiagnosticFlags(input: EmissionInput) {
+function computeDiagnosticFlags(input: EmissionInput, coPercentile?: number) {
   const avgHC = (input.acc_hc + input.idle_hc) / 2;
   const avgCO = (input.acc_co + input.idle_co) / 2;
   const avgO2 = (input.acc_o2 + input.idle_o2) / 2;
@@ -128,7 +128,14 @@ function computeDiagnosticFlags(input: EmissionInput) {
 
   const oxygen_balance = avgO2 < 2 ? "Normal Oxygen Level" : avgO2 <= 4 ? "Elevated Oxygen" : "Excess Oxygen (Lean Mixture Indicator)";
 
-  return { mixture_state, combustion_quality, fuel_burn_efficiency, oxygen_balance };
+  let environmental_status: string | undefined;
+  if (typeof coPercentile === "number") {
+    if (coPercentile < 25) environmental_status = "Elevated Impact";
+    else if (coPercentile <= 75) environmental_status = "Moderate Impact";
+    else environmental_status = "Environmentally Favorable";
+  }
+
+  return { mixture_state, combustion_quality, fuel_burn_efficiency, oxygen_balance, environmental_status };
 }
 
 function traverseTree(node: TreeNode, features: number[]): number {
@@ -161,7 +168,8 @@ async function generateAIInsight(
   percentile: number,
   condition: string,
   fuelSystem: string,
-  diagnosticFlags: ReturnType<typeof computeDiagnosticFlags>
+  diagnosticFlags: ReturnType<typeof computeDiagnosticFlags>,
+  coPercentile?: number
 ): Promise<Record<string, unknown> | null> {
   const apiKey = Deno.env.get("GPT_API_KEY");
   if (!apiKey) {
@@ -169,7 +177,7 @@ async function generateAIInsight(
     return { ai_error: "AI insight temporarily unavailable" };
   }
 
-  const systemPrompt = `You are an automotive emission diagnostic assistant.
+  const systemPrompt = `You are an automotive emission and environmental diagnostic assistant.
 
 You must:
 - Use only the provided diagnostic flags.
@@ -177,12 +185,24 @@ You must:
 - Provide safe maintenance suggestions.
 - Distinguish between Carbureted and EFI engines.
 - Avoid advanced mechanical instructions.
-- Output valid JSON with exactly these keys: summary, likely_causes, recommended_actions, maintenance_tips
+- Output valid JSON with exactly these keys: summary, likely_causes, recommended_actions, maintenance_tips, environmental_summary
 - summary: a 2-3 sentence plain-language explanation
 - likely_causes: array of 2-4 short strings
 - recommended_actions: array of 2-4 short strings
 - maintenance_tips: array of 2-3 short strings
+- environmental_summary: a single concise sentence describing the relative environmental operating condition of the vehicle, understandable for non-technical users. Empty string if environmental_status is not provided.
 - Do not invent issues not supported by the flags.
+
+Environmental interpretation instructions:
+- Use environmental_status and co_percentile when provided.
+- Briefly explain the environmental implication of the current combustion condition.
+- Compare CO emissions against the reference vehicle population using co_percentile.
+- Higher co_percentile values indicate relatively lower carbon monoxide emissions compared with the analyzed vehicle population.
+- Lower co_percentile values indicate comparatively elevated carbon monoxide emissions.
+- Mention environmental observations only when supported by the provided indicators.
+- Do not estimate carbon footprint, fuel consumption, or greenhouse gas emissions beyond the supplied information.
+- Environmental interpretation should be concise and understandable for non-technical users.
+- The summary may optionally include one sentence describing the relative environmental operating condition of the vehicle.
 - Return raw JSON only. No markdown, no code blocks.`;
 
   const userPayload = JSON.stringify({
@@ -191,6 +211,8 @@ You must:
     condition,
     engine_type: fuelSystem,
     diagnostic_flags: diagnosticFlags,
+    co_percentile: coPercentile,
+    environmental_status: diagnosticFlags.environmental_status,
   });
 
   try {
@@ -318,17 +340,16 @@ serve(async (req) => {
     const efiScore = predictEFI(input);
     const percentile = computePercentile(efiScore, distribution);
     const condition = getCondition(efiScore);
-    const diagnostic_flags = computeDiagnosticFlags(input);
-
     const avgCo = (input.acc_co + input.idle_co) / 2;
     const co_percentile = computePercentile(avgCo, coDistribution);
     const co_average = Math.round(avgCo * 1000) / 1000;
+    const diagnostic_flags = computeDiagnosticFlags(input, co_percentile);
     console.log(`Avg CO: ${co_average}, CO percentile: ${co_percentile}%`);
 
     console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`, diagnostic_flags);
 
     // Generate AI insight (non-blocking graceful failure)
-    const ai_insight = await generateAIInsight(efiScore, percentile, condition, fuel_system || "Unknown", diagnostic_flags);
+    const ai_insight = await generateAIInsight(efiScore, percentile, condition, fuel_system || "Unknown", diagnostic_flags, co_percentile);
 
     return new Response(
       JSON.stringify({ efi_score: efiScore, percentile, condition, diagnostic_flags, ai_insight, co_percentile, co_average }),
