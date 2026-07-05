@@ -119,8 +119,10 @@ const Analyze = () => {
           percentile,
           condition,
           ai_insight: aiInsight,
+          co_percentile: coPercentile,
+          co_average: coAverage,
           ...vehicleInfo,
-        });
+        } as any);
 
       if (insertError) throw insertError;
 
