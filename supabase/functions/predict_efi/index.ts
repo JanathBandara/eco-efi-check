@@ -114,7 +114,7 @@ function getCondition(score: number): string {
   return "Poor";
 }
 
-function computeDiagnosticFlags(input: EmissionInput, coPercentile?: number) {
+function computeDiagnosticFlags(input: EmissionInput) {
   const avgHC = (input.acc_hc + input.idle_hc) / 2;
   const avgCO = (input.acc_co + input.idle_co) / 2;
   const avgO2 = (input.acc_o2 + input.idle_o2) / 2;
@@ -128,14 +128,7 @@ function computeDiagnosticFlags(input: EmissionInput, coPercentile?: number) {
 
   const oxygen_balance = avgO2 < 2 ? "Normal Oxygen Level" : avgO2 <= 4 ? "Elevated Oxygen" : "Excess Oxygen (Lean Mixture Indicator)";
 
-  let environmental_status: string | undefined;
-  if (typeof coPercentile === "number") {
-    if (coPercentile < 25) environmental_status = "Elevated Impact";
-    else if (coPercentile <= 75) environmental_status = "Moderate Impact";
-    else environmental_status = "Environmentally Favorable";
-  }
-
-  return { mixture_state, combustion_quality, fuel_burn_efficiency, oxygen_balance, environmental_status };
+  return { mixture_state, combustion_quality, fuel_burn_efficiency, oxygen_balance };
 }
 
 function traverseTree(node: TreeNode, features: number[]): number {
@@ -190,20 +183,20 @@ You must:
 - likely_causes: array of 2-4 short strings
 - recommended_actions: array of 2-4 short strings
 - maintenance_tips: array of 2-3 short strings
-- environmental_summary: a single concise sentence describing the relative environmental operating condition of the vehicle, understandable for non-technical users. Empty string if environmental_status is not provided.
+- environmental_summary: a single concise paragraph describing the relative environmental operating condition of the vehicle, understandable for non-technical users. Empty string if co_percentile is not provided.
 - Do not invent issues not supported by the flags.
 
-Environmental interpretation instructions:
-- Use environmental_status and co_percentile when provided.
-- Briefly explain the environmental implication of the current combustion condition.
-- Compare CO emissions against the reference vehicle population using co_percentile.
-- Higher co_percentile values indicate relatively lower carbon monoxide emissions compared with the analyzed vehicle population.
-- Lower co_percentile values indicate comparatively elevated carbon monoxide emissions.
-- Mention environmental observations only when supported by the provided indicators.
-- Do not estimate carbon footprint, fuel consumption, or greenhouse gas emissions beyond the supplied information.
-- Environmental interpretation should be concise and understandable for non-technical users.
-- The summary may optionally include one sentence describing the relative environmental operating condition of the vehicle.
-- Return raw JSON only. No markdown, no code blocks.`;
+environmental_summary instructions:
+- co_percentile represents the relative carbon monoxide emission performance of the vehicle within the reference dataset.
+- A co_percentile of 90 means the vehicle emits less carbon monoxide than approximately 90% of vehicles in the analyzed population.
+- Higher co_percentile values therefore indicate comparatively cleaner combustion behaviour and more favourable environmental operating conditions.
+- Lower co_percentile values indicate comparatively elevated carbon monoxide emissions and less favourable environmental operating conditions.
+- Environmental observations must always remain consistent with co_percentile.
+- Never describe a vehicle with high co_percentile values as having elevated carbon monoxide emissions.
+- Never contradict the percentile interpretation.
+- Environmental insights should focus only on combustion efficiency and relative carbon monoxide emission behaviour.
+- Do not estimate greenhouse-gas emissions, carbon footprint, fuel economy, or environmental quantities that are not directly supported by the provided indicators.
+- Integrate environmental observations naturally within the summary when appropriate.`;
 
   const userPayload = JSON.stringify({
     efi_score: efiScore,
@@ -212,7 +205,6 @@ Environmental interpretation instructions:
     engine_type: fuelSystem,
     diagnostic_flags: diagnosticFlags,
     co_percentile: coPercentile,
-    environmental_status: diagnosticFlags.environmental_status,
   });
 
   try {
@@ -343,7 +335,7 @@ serve(async (req) => {
     const avgCo = (input.acc_co + input.idle_co) / 2;
     const co_percentile = computePercentile(avgCo, coDistribution);
     const co_average = Math.round(avgCo * 1000) / 1000;
-    const diagnostic_flags = computeDiagnosticFlags(input, co_percentile);
+    const diagnostic_flags = computeDiagnosticFlags(input);
     console.log(`Avg CO: ${co_average}, CO percentile: ${co_percentile}%`);
 
     console.log(`EFI: ${efiScore}, Percentile: ${percentile}%, Condition: ${condition}`, diagnostic_flags);
