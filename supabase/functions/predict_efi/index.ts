@@ -188,11 +188,11 @@ You must:
 
 environmental_summary instructions:
 - co_percentile represents the relative carbon monoxide emission performance of the vehicle within the reference dataset.
-- A co_percentile of 90 means the vehicle emits less carbon monoxide than approximately 90% of vehicles in the analyzed population.
-- Higher co_percentile values therefore indicate comparatively cleaner combustion behaviour and more favourable environmental operating conditions.
-- Lower co_percentile values indicate comparatively elevated carbon monoxide emissions and less favourable environmental operating conditions.
+- A co_percentile of 90 means the vehicle emits more carbon monoxide than approximately 90% of vehicles in the analyzed population.
+- Lower co_percentile values therefore indicate comparatively cleaner combustion behaviour and more favourable environmental operating conditions.
+- Higher co_percentile values indicate comparatively elevated carbon monoxide emissions and less favourable environmental operating conditions.
 - Environmental observations must always remain consistent with co_percentile.
-- Never describe a vehicle with high co_percentile values as having elevated carbon monoxide emissions.
+- Never describe a vehicle with low co_percentile values as having elevated carbon monoxide emissions.
 - Never contradict the percentile interpretation.
 - Environmental insights should focus only on combustion efficiency and relative carbon monoxide emission behaviour.
 - Do not estimate greenhouse-gas emissions, carbon footprint, fuel economy, or environmental quantities that are not directly supported by the provided indicators.
