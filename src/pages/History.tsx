@@ -60,8 +60,7 @@ const History = () => {
           .from("efi_records")
           .select("*")
           .eq("is_deleted", false)
-          .order("created_at", { ascending: false })
-          .limit(20);
+          .order("created_at", { ascending: false });
 
         if (!error && data) {
           setRecords(data as EFIRecord[]);
