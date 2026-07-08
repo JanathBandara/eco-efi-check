@@ -81,6 +81,10 @@ const History = () => {
     return "text-gauge-poor bg-gauge-poor/10";
   };
 
+  const totalPages = Math.max(1, Math.ceil(records.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRecords = records.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
   return (
     <div className="min-h-screen relative">
       <HeroBackground />
