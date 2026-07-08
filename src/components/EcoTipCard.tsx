@@ -2,13 +2,12 @@ import { TreeDeciduous } from "lucide-react";
 
 interface EcoTipCardProps {
   environmentalSummary?: string | null;
-  environmentalStatus?: string | null;
 }
 
 const DEFAULT_MESSAGE =
   "Improving combustion efficiency by preventive maintenance may reduce hydrocarbon and carbon monoxide emissions.";
 
-export const EcoTipCard = ({ environmentalSummary, environmentalStatus }: EcoTipCardProps = {}) => {
+export const EcoTipCard = ({ environmentalSummary }: EcoTipCardProps = {}) => {
   const message =
     environmentalSummary && environmentalSummary.trim().length > 0
       ? environmentalSummary
