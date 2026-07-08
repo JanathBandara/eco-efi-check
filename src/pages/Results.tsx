@@ -28,16 +28,6 @@ const Results = () => {
   const location = useLocation();
   const { score: rawScore, percentile: rawPercentile, condition: backendCondition, input, vehicleBrand, vehicleModel, vehicleYear, fuelSystem, aiInsight, coPercentile, coAverage } = (location.state as { score: number; percentile: number; condition: string; input: EmissionInput; vehicleBrand?: string; vehicleModel?: string; vehicleYear?: number; fuelSystem?: string; aiInsight?: { summary: string; likely_causes: string[]; recommended_actions: string[]; maintenance_tips: string[]; environmental_summary?: string; ai_error?: string }; coPercentile?: number | null; coAverage?: number | null }) || {};
 
-  const environmentalStatus =
-    (aiInsight as unknown as { environmental_status?: string } | undefined)?.environmental_status ??
-    (coPercentile != null
-      ? coPercentile < 25
-        ? "Elevated Impact"
-        : coPercentile <= 75
-        ? "Moderate Impact"
-        : "Environmentally Favorable"
-      : undefined);
-
   // Clamp score: negative or zero values display as 1, max at 100
   const score = rawScore <= 0 ? 1 : Math.min(rawScore, 100);
 
@@ -336,7 +326,6 @@ const Results = () => {
         <div className="mt-6">
           <EcoTipCard
             environmentalSummary={aiInsight?.environmental_summary}
-            environmentalStatus={environmentalStatus}
           />
         </div>
 

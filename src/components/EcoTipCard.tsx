@@ -2,13 +2,12 @@ import { TreeDeciduous } from "lucide-react";
 
 interface EcoTipCardProps {
   environmentalSummary?: string | null;
-  environmentalStatus?: string | null;
 }
 
 const DEFAULT_MESSAGE =
   "Improving combustion efficiency by preventive maintenance may reduce hydrocarbon and carbon monoxide emissions.";
 
-export const EcoTipCard = ({ environmentalSummary, environmentalStatus }: EcoTipCardProps = {}) => {
+export const EcoTipCard = ({ environmentalSummary }: EcoTipCardProps = {}) => {
   const message =
     environmentalSummary && environmentalSummary.trim().length > 0
       ? environmentalSummary
@@ -24,11 +23,6 @@ export const EcoTipCard = ({ environmentalSummary, environmentalStatus }: EcoTip
             <h3 className="text-sm font-semibold text-foreground">
               Environmental Impact
             </h3>
-            {environmentalStatus && (
-              <span className="text-xs font-medium text-gauge-healthy bg-gauge-healthy/10 px-2 py-0.5 rounded-full">
-                {environmentalStatus}
-              </span>
-            )}
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {message}
