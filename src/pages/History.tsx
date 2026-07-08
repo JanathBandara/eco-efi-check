@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car, Trash2 } from "lucide-react";
+import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
