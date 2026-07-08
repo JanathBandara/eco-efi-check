@@ -29,6 +29,8 @@ const History = () => {
   const [records, setRecords] = useState<EFIRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
