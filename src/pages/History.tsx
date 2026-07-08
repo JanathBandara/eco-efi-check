@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car, Trash2 } from "lucide-react";
+import { Leaf, ArrowLeft, Clock, TrendingUp, Loader2, LogOut, Car, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -29,6 +29,15 @@ const History = () => {
   const [records, setRecords] = useState<EFIRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(records.length / ITEMS_PER_PAGE));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [records.length]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -58,8 +67,7 @@ const History = () => {
           .from("efi_records")
           .select("*")
           .eq("is_deleted", false)
-          .order("created_at", { ascending: false })
-          .limit(20);
+          .order("created_at", { ascending: false });
 
         if (!error && data) {
           setRecords(data as EFIRecord[]);
@@ -79,6 +87,10 @@ const History = () => {
     if (score >= 40) return "text-gauge-moderate bg-gauge-moderate/10";
     return "text-gauge-poor bg-gauge-poor/10";
   };
+
+  const totalPages = Math.max(1, Math.ceil(records.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRecords = records.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen relative">
@@ -136,8 +148,9 @@ const History = () => {
               </Link>
             </div>
           ) : (
+            <>
             <div className="space-y-4">
-              {records.map((record) => (
+              {paginatedRecords.map((record) => (
                 <div
                   key={record.id}
                   className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
@@ -204,6 +217,38 @@ const History = () => {
                 </div>
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, records.length)} of {records.length} results
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Prev
+                  </Button>
+                  <span className="text-sm font-medium text-foreground px-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
