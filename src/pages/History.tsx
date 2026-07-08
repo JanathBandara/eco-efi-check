@@ -32,6 +32,13 @@ const History = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(records.length / ITEMS_PER_PAGE));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [records.length]);
+
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
