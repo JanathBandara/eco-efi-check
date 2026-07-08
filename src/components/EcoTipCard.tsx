@@ -24,11 +24,6 @@ export const EcoTipCard = ({ environmentalSummary, environmentalStatus }: EcoTip
             <h3 className="text-sm font-semibold text-foreground">
               Environmental Impact
             </h3>
-            {environmentalStatus && (
-              <span className="text-xs font-medium text-gauge-healthy bg-gauge-healthy/10 px-2 py-0.5 rounded-full">
-                {environmentalStatus}
-              </span>
-            )}
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {message}
