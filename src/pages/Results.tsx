@@ -219,7 +219,7 @@ const Results = () => {
     <div className="min-h-screen relative">
       <HeroBackground />
       
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 py-8 max-w-2xl lg:max-w-6xl">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <Link to="/" className="flex items-center gap-2">
@@ -252,73 +252,73 @@ const Results = () => {
             </div>
           )}
           {!vehicleBrand && !vehicleModel && !vehicleYear && !fuelSystem && <div className="mb-8" />}
-          <div className="flex justify-center mb-8">
-            <EFIGauge score={score} />
-          </div>
 
-          {/* Status Card */}
-          <div className={`rounded-2xl p-4 ${status.bgClass} flex items-start gap-3 mb-8`}>
-            <status.icon className={`h-6 w-6 ${status.colorClass} flex-shrink-0 mt-0.5`} />
-            <div>
-              <p className={`font-semibold ${status.colorClass}`}>
-                Engine Condition: {status.label}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {status.description}
-              </p>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start">
+            {/* Left column: score, status, actions */}
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <EFIGauge score={score} />
+              </div>
+
+              {/* Status Card */}
+              <div className={`rounded-2xl p-4 ${status.bgClass} flex items-start gap-3`}>
+                <status.icon className={`h-6 w-6 ${status.colorClass} flex-shrink-0 mt-0.5`} />
+                <div>
+                  <p className={`font-semibold ${status.colorClass}`}>
+                    Engine Condition: {status.label}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {status.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-4">
+                <Button
+                  variant="eco"
+                  size="lg"
+                  className="flex-1"
+                  onClick={generatePDF}
+                >
+                  <Download className="h-5 w-5" />
+                  Download PDF Report
+                </Button>
+                <Link to="/analyze" className="flex-1">
+                  <Button variant="eco-outline" size="lg" className="w-full">
+                    <RefreshCw className="h-5 w-5" />
+                    Test Again
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
 
-          {/* Percentile */}
-          <div className="text-center mb-8">
-            <p className="text-lg text-foreground">
-              Your vehicle performs better than{" "}
-              <span className="font-bold text-primary">{percentile}%</span>
-              {" "}of engines analyzed
-            </p>
-          </div>
+            {/* Right column: distributions & insights */}
+            <div className="space-y-8">
+              {/* Percentile */}
+              <div className="text-center lg:text-left">
+                <p className="text-lg text-foreground">
+                  Your vehicle performs better than{" "}
+                  <span className="font-bold text-primary">{percentile}%</span>
+                  {" "}of engines analyzed
+                </p>
+              </div>
 
-          {/* Distribution */}
-          <div className="mb-8">
-            <DistributionBar percentile={percentile} />
-          </div>
+              <DistributionBar percentile={percentile} />
 
-          {/* CO Emission Distribution */}
-          {coPercentile !== null && coPercentile !== undefined && (
-            <div className="mb-8">
-              <COEmissionCard coPercentile={coPercentile} coAverage={coAverage} />
+              {coPercentile !== null && coPercentile !== undefined && (
+                <COEmissionCard coPercentile={coPercentile} coAverage={coAverage} />
+              )}
+
+              {aiInsight && !aiInsight.ai_error && (
+                <AIInsightCard insight={aiInsight} />
+              )}
+              {aiInsight?.ai_error && (
+                <div className="rounded-2xl border border-border/50 bg-muted/50 p-4 text-sm text-muted-foreground">
+                  <p>AI diagnostic insight is temporarily unavailable. Your EFI score and diagnostics are still accurate.</p>
+                </div>
+              )}
             </div>
-          )}
-
-          {/* AI Insight */}
-          {aiInsight && !aiInsight.ai_error && (
-            <div className="mb-8">
-              <AIInsightCard insight={aiInsight} />
-            </div>
-          )}
-          {aiInsight?.ai_error && (
-            <div className="mb-8 rounded-2xl border border-border/50 bg-muted/50 p-4 text-sm text-muted-foreground">
-              <p>AI diagnostic insight is temporarily unavailable. Your EFI score and diagnostics are still accurate.</p>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              variant="eco" 
-              size="lg" 
-              className="flex-1"
-              onClick={generatePDF}
-            >
-              <Download className="h-5 w-5" />
-              Download PDF Report
-            </Button>
-            <Link to="/analyze" className="flex-1">
-              <Button variant="eco-outline" size="lg" className="w-full">
-                <RefreshCw className="h-5 w-5" />
-                Test Again
-              </Button>
-            </Link>
           </div>
         </div>
 
