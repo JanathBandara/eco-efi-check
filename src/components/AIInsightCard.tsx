@@ -28,9 +28,10 @@ export const AIInsightCard = ({ insight }: AIInsightCardProps) => {
         <p className="text-sm text-foreground leading-relaxed">{insight.summary}</p>
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-3 xl:items-start">
       {/* Likely Causes */}
       {insight.likely_causes?.length > 0 && (
-        <div className="rounded-2xl border border-border/50 p-4">
+        <div className="rounded-2xl border border-border/50 p-4 h-full">
           <div className="flex items-center gap-2 mb-3">
             <AlertCircle className="h-4 w-4 text-gauge-moderate" />
             <h3 className="font-semibold text-sm text-foreground">Likely Causes</h3>
@@ -48,7 +49,7 @@ export const AIInsightCard = ({ insight }: AIInsightCardProps) => {
 
       {/* Recommended Actions */}
       {insight.recommended_actions?.length > 0 && (
-        <div className="rounded-2xl border border-border/50 p-4">
+        <div className="rounded-2xl border border-border/50 p-4 h-full">
           <div className="flex items-center gap-2 mb-3">
             <Wrench className="h-4 w-4 text-primary" />
             <h3 className="font-semibold text-sm text-foreground">Recommended Actions</h3>
@@ -66,7 +67,7 @@ export const AIInsightCard = ({ insight }: AIInsightCardProps) => {
 
       {/* Maintenance Tips */}
       {insight.maintenance_tips?.length > 0 && (
-        <div className="rounded-2xl border border-border/50 p-4">
+        <div className="rounded-2xl border border-border/50 p-4 h-full">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb className="h-4 w-4 text-gauge-healthy" />
             <h3 className="font-semibold text-sm text-foreground">Maintenance Tips</h3>
@@ -81,6 +82,7 @@ export const AIInsightCard = ({ insight }: AIInsightCardProps) => {
           </ul>
         </div>
       )}
+      </div>
     </div>
   );
 };
