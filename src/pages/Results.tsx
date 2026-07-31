@@ -273,6 +273,9 @@ const Results = () => {
                 </div>
               </div>
 
+              {/* Environmental Impact */}
+              <EcoTipCard environmentalSummary={aiInsight?.environmental_summary} />
+
               {/* Actions */}
               <div className="flex flex-col sm:flex-row lg:flex-col gap-4">
                 <Button
@@ -320,13 +323,6 @@ const Results = () => {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Environmental Perspective */}
-        <div className="mt-6">
-          <EcoTipCard
-            environmentalSummary={aiInsight?.environmental_summary}
-          />
         </div>
 
         {/* Back link */}
