@@ -13,18 +13,17 @@ export const EcoTipCard = ({ environmentalSummary }: EcoTipCardProps = {}) => {
       ? environmentalSummary
       : DEFAULT_MESSAGE;
   return (
-    <div className="w-full rounded-2xl border border-border/50 bg-card/50 p-5">
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-gauge-healthy/10 flex-shrink-0">
+    <div className="relative w-full overflow-hidden rounded-2xl border-2 border-gauge-healthy/40 bg-gauge-healthy/5 p-5 shadow-card">
+      <div className="absolute inset-y-0 left-0 w-1.5 bg-gauge-healthy" />
+      <div className="flex items-start gap-3 pl-2">
+        <div className="p-2 rounded-lg bg-gauge-healthy/15 flex-shrink-0">
           <TreeDeciduous className="h-5 w-5 text-gauge-healthy" />
         </div>
         <div className="flex-1">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-foreground">
-              Environmental Impact
-            </h3>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <h3 className="text-base font-bold text-foreground mb-1.5">
+            Environmental Impact
+          </h3>
+          <p className="text-sm text-foreground/80 leading-relaxed">
             {message}
           </p>
         </div>
