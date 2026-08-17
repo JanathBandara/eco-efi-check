@@ -95,12 +95,25 @@ const Results = () => {
 
     // Vehicle info in PDF
     let yOffset = 115;
+    pdf.setFontSize(10);
+    pdf.setTextColor(110, 110, 110);
+    const statusDescLines = pdf.splitTextToSize(status.description, 170);
+    pdf.text(statusDescLines, 20, yOffset);
+    yOffset += statusDescLines.length * 5 + 6;
+
     if (vehicleBrand || vehicleModel || vehicleYear) {
       pdf.setFontSize(12);
       pdf.setTextColor(80, 80, 80);
       pdf.text(`Vehicle: ${[vehicleBrand, vehicleModel, vehicleYear].filter(Boolean).join(" · ")}`, 20, yOffset);
-      yOffset += 15;
+      yOffset += 8;
     }
+    if (fuelSystem) {
+      pdf.setFontSize(12);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(`Fuel System: ${fuelSystem}`, 20, yOffset);
+      yOffset += 8;
+    }
+    yOffset += 7;
 
     // Input values
     pdf.setTextColor(33, 33, 33);
@@ -139,8 +152,46 @@ const Results = () => {
 
     yOffset += leftCol.length * 8 + 10;
 
+    // CO Emission Distribution
+    if (coPercentile !== null && coPercentile !== undefined) {
+      if (yOffset > 250) { pdf.addPage(); yOffset = 20; }
+      pdf.setFontSize(14);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text("CO Emission Distribution", 20, yOffset);
+      yOffset += 8;
+      pdf.setFontSize(10);
+      pdf.setTextColor(80, 80, 80);
+      if (coAverage !== null && coAverage !== undefined) {
+        pdf.text(`Average CO: ${coAverage}%`, 20, yOffset);
+        yOffset += 6;
+      }
+      const coLowerThan = Math.max(0, Math.min(100, 100 - coPercentile));
+      const coMessage =
+        coPercentile <= 50
+          ? `Your carbon monoxide emissions are lower than ${coLowerThan}% of vehicles analyzed.`
+          : `Your engine emits more carbon monoxide than ${coPercentile}% of vehicles within the reference population.`;
+      const coLines = pdf.splitTextToSize(coMessage, 170);
+      pdf.text(coLines, 20, yOffset);
+      yOffset += coLines.length * 5 + 10;
+    }
+
+    // Environmental Impact
+    if (aiInsight?.environmental_summary) {
+      if (yOffset > 250) { pdf.addPage(); yOffset = 20; }
+      pdf.setFontSize(14);
+      pdf.setTextColor(33, 33, 33);
+      pdf.text("Environmental Impact", 20, yOffset);
+      yOffset += 8;
+      pdf.setFontSize(10);
+      pdf.setTextColor(80, 80, 80);
+      const envLines = pdf.splitTextToSize(aiInsight.environmental_summary, 170);
+      pdf.text(envLines, 20, yOffset);
+      yOffset += envLines.length * 5 + 10;
+    }
+
     // AI Insight section
     if (aiInsight && !aiInsight.ai_error) {
+      if (yOffset > 250) { pdf.addPage(); yOffset = 20; }
       pdf.setFontSize(14);
       pdf.setTextColor(33, 33, 33);
       pdf.text("AI Diagnostic Insight", 20, yOffset);
