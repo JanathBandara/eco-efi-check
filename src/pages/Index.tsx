@@ -98,12 +98,6 @@ const Index = () => {
           </div>
         </main>
 
-        {/* Footer placeholder for future features */}
-        <footer className="text-center py-8 border-t border-border mt-auto">
-          <p className="text-sm text-muted-foreground">
-            Coming soon: Compare with national average • Advanced emissions breakdown
-          </p>
-        </footer>
       </div>
     </div>
   );
