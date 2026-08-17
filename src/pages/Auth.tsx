@@ -64,7 +64,7 @@ const Auth = () => {
           </div>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Sign in to EFI Analyzer</h1>
+          <h1 className="text-2xl font-bold text-foreground">Sign in to Eco EFI Check</h1>
           <p className="text-muted-foreground text-sm mt-2">
             Sign in with Google to access the emission analysis tool
           </p>
