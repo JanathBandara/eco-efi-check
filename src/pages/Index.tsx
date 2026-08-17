@@ -15,7 +15,7 @@ const Index = () => {
             <div className="p-2 rounded-lg gradient-eco">
               <Leaf className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">EFI Analyzer</span>
+            <span className="text-xl font-bold text-foreground">Eco EFI Check</span>
           </div>
           <Link to="/history">
             <Button variant="ghost" size="sm">

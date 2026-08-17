@@ -210,7 +210,7 @@ const Results = () => {
     pdf.setFontSize(9);
     pdf.setTextColor(150, 150, 150);
     pdf.text(`Generated: ${timestamp}`, 20, 280);
-    pdf.text("EFI Analyzer - Engine Health Analysis", 20, 287);
+    pdf.text("Eco EFI Check - Engine Health Analysis", 20, 287);
 
     pdf.save(`EFI-Report-${Date.now()}.pdf`);
   };
@@ -226,7 +226,7 @@ const Results = () => {
             <div className="p-2 rounded-lg gradient-eco">
               <Leaf className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-foreground">EFI Analyzer</span>
+            <span className="text-lg font-bold text-foreground">Eco EFI Check</span>
           </Link>
           <Link to="/analyze">
             <Button variant="ghost" size="sm">
