@@ -350,12 +350,6 @@ const Analyze = () => {
           </form>
         </div>
 
-        {/* Future features placeholder */}
-        <div className="mt-8 p-6 rounded-2xl border border-dashed border-border bg-muted/30 text-center">
-          <p className="text-sm text-muted-foreground">
-            🔮 Coming soon: Air-fuel mixture graphs and advanced analysis
-          </p>
-        </div>
       </div>
     </div>
   );
