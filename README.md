@@ -255,6 +255,4 @@ A complete bibliographic citation and DOI will be added to this repository follo
 
 ## License
 
-Licensing information for the publicly released source code should be specified in the repository's `LICENSE` file.
-
 Until a formal software license is provided, no additional rights to reuse, modify, or redistribute the source code should be assumed.
