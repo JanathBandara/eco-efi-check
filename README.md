@@ -262,11 +262,9 @@ Complete reproduction of the reported model-development results requires access 
 
 **J. Bandara and R. Nawarathna**
 
-*An Artificial Intelligence Framework for Continuous Environmental Assessment of Vehicle Emissions Using an Engine Freshness Index.*
+*An AI-Driven Framework for Continuous Environmental Assessment of Vehicle Emissions Using an Engine Freshness Index*
 
 Submitted to **Environmental Modelling & Software**.
-
-Publication details and DOI will be added following publication.
 
 ---
 
