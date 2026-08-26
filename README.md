@@ -36,7 +36,7 @@ EFI was formulated using an unsupervised learning approach. K-Means clustering w
 
 ### EFI Prediction
 
-The derived EFI values were subsequently used as learning targets for supervised regression. A constrained Random Forest model was selected for deployment and achieved an **R² of 0.992 on independent vehicle-emission records**.
+The derived EFI values were subsequently used as learning targets for supervised regression. A constrained Random Forest model was selected for deployment and achieved an **R² of 0.984 on independent vehicle-emission records**.
 
 The trained model is used by Eco EFI Check to estimate EFI values for newly supplied emission measurements.
 
