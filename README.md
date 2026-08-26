@@ -1,325 +1,299 @@
 # Eco EFI Check
 
-**AI-assisted vehicle engine health and emission analysis from tailpipe gas-analyser readings.**
+**A web-based environmental decision-support platform for continuous vehicle-emission assessment using the Engine Freshness Index (EFI).**
 
-Live app: <https://eco-efi-check.lovable.app>
+**Live application:** https://eco-efi-check.lovable.app
 
-Eco EFI Check is the reference web implementation of a research project on data-driven
-engine-condition assessment. It takes the twelve emission-test parameters produced by a
-standard exhaust gas analyser (idle and acceleration modes), runs them through a
-Random-Forest regression model trained during the research, and returns an
-**EFI (Engine Fuel-Injection) Score** on a 1–100 scale together with a population
-percentile, a rule-based diagnostic breakdown, an LLM-generated maintenance report and a
-downloadable PDF.
+## Overview
 
----
+Eco EFI Check is the web-based implementation of the environmental assessment framework presented in the research study:
 
-## Table of contents
+**“An Artificial Intelligence Framework for Continuous Environmental Assessment of Vehicle Emissions Using an Engine Freshness Index.”**
 
-1. [Motivation](#motivation)
-2. [Features](#features)
-3. [System architecture](#system-architecture)
-4. [Technology stack](#technology-stack)
-5. [Input parameters](#input-parameters)
-6. [Scoring and interpretation](#scoring-and-interpretation)
-7. [Diagnostic rule engine](#diagnostic-rule-engine)
-8. [AI insight layer](#ai-insight-layer)
-9. [Data model](#data-model)
-10. [Getting started](#getting-started)
-11. [Configuration](#configuration)
-12. [Project structure](#project-structure)
-13. [Security](#security)
-14. [Limitations](#limitations)
-15. [Citing this work](#citing-this-work)
-16. [License](#license)
+Traditional vehicle-emission testing primarily relies on binary pass/fail classifications based on predefined regulatory thresholds. The proposed framework extends this approach by transforming vehicle-emission measurements into a continuous and interpretable environmental assessment using hierarchical machine learning, explainability analysis, diagnostic reasoning, and LLM-assisted insight generation.
+
+The framework introduces the **Engine Freshness Index (EFI)**, a continuous indicator representing the degree to which observed vehicle-emission characteristics deviate from an environmentally favorable combustion state.
+
+Eco EFI Check demonstrates the practical implementation of this framework by integrating EFI estimation, diagnostic reasoning, population-relative emission assessment, and human-readable environmental and maintenance-related insights within a unified web platform.
 
 ---
 
-## Motivation
+## Research Framework
 
-Emission-test reports issued at inspection centres are pass/fail documents: they tell a
-vehicle owner whether the car is legal, not how healthy the engine is or what to do about
-it. The research behind this application asks whether the same raw gas-analyser readings
-can be used to (a) produce a continuous engine-health score, (b) place a vehicle relative
-to a reference population and (c) be translated into non-technical, actionable guidance.
+The framework consists of the following main stages:
 
-Eco EFI Check operationalises that pipeline end-to-end so the model can be evaluated with
-real users rather than only on a held-out test set.
+1. **Vehicle-emission data preprocessing**
+2. **Unsupervised EFI formulation**
+3. **Supervised EFI prediction**
+4. **Explainability analysis**
+5. **Diagnostic reasoning**
+6. **LLM-assisted insight generation**
+7. **Environmental decision support**
 
-## Features
+### EFI Formulation
 
-- **Emission data entry** — validated form for the 12 idle/acceleration parameters plus
-  optional vehicle metadata (make, model, year, fuel system: Carbureted or EFI).
-- **EFI score prediction** — server-side inference with the trained Random-Forest model.
-- **Population percentile** — the score is ranked against a reference distribution of
-  previously analysed vehicles.
-- **CO emission percentile** — average carbon-monoxide output ranked against a separate
-  CO reference distribution, with an environmental-impact reading.
-- **Rule-based diagnostics** — four deterministic indicators (mixture state, combustion
-  quality, fuel-burn efficiency, oxygen balance) derived directly from the readings.
-- **AI diagnostic insight** — an LLM converts the score, percentiles and diagnostic flags
-  into a plain-language summary, likely causes, recommended actions, maintenance tips and
-  an environmental summary.
-- **History** — per-user record of past analyses with pagination and soft delete.
-- **PDF report** — client-side export containing every element shown on the results page.
-- **Google sign-in** — authenticated, per-user data isolation enforced at the database
-  level.
+EFI was formulated using an unsupervised learning approach. K-Means clustering was applied to identify emission patterns representing environmentally favorable combustion behavior. A clean-combustion reference was subsequently established, and distance-based modelling was used to derive the continuous EFI indicator.
 
-## System architecture
+### EFI Prediction
 
-```text
-┌──────────────────────────── Client (browser) ─────────────────────────────┐
-│  React 18 + Vite + TypeScript + Tailwind (shadcn/ui)                      │
-│                                                                           │
-│  /            Landing page                                                │
-│  /auth        Google OAuth sign-in                                        │
-│  /analyze     Emission input form  ──┐                                    │
-│  /results     Score, percentiles, diagnostics, AI insight, PDF export     │
-│  /history     Past analyses (paginated, soft delete)                      │
-└──────────────────────────────────────┼────────────────────────────────────┘
-                                       │ HTTPS + JWT (Bearer)
-                                       ▼
-┌───────────────────── Backend (Supabase / Lovable Cloud) ──────────────────┐
-│                                                                           │
-│  Edge Function: predict_efi  (Deno / TypeScript)                          │
-│    1. Verify JWT, authorise caller                                        │
-│    2. Validate the 12 numeric features and fuel_system                    │
-│    3. Load reference distributions from Object Storage (cached per        │
-│       cold start)                                                         │
-│    4. Random-Forest inference (tree traversal over the exported model)     │
-│    5. Percentile computation (EFI score + average CO)                     │
-│    6. Rule engine -> 4 diagnostic flags                                   │
-│    7. LLM call -> structured JSON insight (graceful degradation)           │
-│    8. Return { efi_score, percentile, condition, diagnostic_flags,        │
-│                ai_insight, co_percentile, co_average }                    │
-│                                                                           │
-│  Auth        Google OAuth provider, JWT issuance                          │
-│  Postgres    public.efi_records (row-level security, soft delete)         │
-│  Storage     efi-distribution/efi_distribution.json                       │
-│              efi-distribution/co_distribution.json                        │
-└───────────────────────────────────────────────────────────────────────────┘
-                                       │
-                                       ▼
-                        External LLM provider (chat completions)
-```
+The derived EFI values were subsequently used as learning targets for supervised regression. A constrained Random Forest model was selected for deployment and achieved an **R² of 0.992 on independent vehicle-emission records**.
 
-A Mermaid version of this diagram is maintained alongside the research documentation.
+The trained model is used by Eco EFI Check to estimate EFI values for newly supplied emission measurements.
 
-### Request flow
+### Explainability and Diagnostic Reasoning
 
-1. The user submits emission readings on `/analyze`.
-2. The client invokes the `predict_efi` Edge Function with the user's access token.
-3. The function validates input, predicts the EFI score, computes both percentiles and the
-   diagnostic flags, then requests the AI insight.
-4. The client persists the result to `efi_records` and renders `/results`.
-5. The user can export a PDF or revisit the analysis from `/history`.
+Explainability analysis was used during the research to investigate the contribution of emission characteristics to EFI predictions and to verify that model behaviour was associated with physically meaningful combustion-efficiency and pollutant characteristics.
 
-## Technology stack
+Within the deployed platform, EFI results and emission measurements are further processed through a rule-based diagnostic reasoning layer. The resulting structured diagnostic information provides interpretations related to combustion behaviour, air–fuel balance, oxygen utilisation, fuel-burn efficiency, and relative emission performance.
 
-| Layer | Technology |
-| --- | --- |
-| UI | React 18, TypeScript, Vite 5, Tailwind CSS 3, shadcn/ui, Radix UI, lucide-react |
-| State / data | TanStack Query, React Hook Form, Zod |
-| Charts & reports | Recharts, jsPDF |
-| Routing | React Router 6 |
-| Backend runtime | Supabase Edge Functions (Deno) |
-| Database | PostgreSQL with row-level security |
-| Object storage | Supabase Storage (reference distributions) |
-| Auth | Supabase Auth, Google OAuth |
-| ML inference | Random-Forest regressor exported to JSON, traversed in TypeScript |
-| Generative AI | OpenAI-compatible chat-completions endpoint, JSON-mode output |
+### LLM-Assisted Insight Generation
 
-## Input parameters
+Structured outputs from the EFI and diagnostic reasoning components are provided to an LLM-assisted insight-generation module.
 
-Two measurement modes, six parameters each:
+The LLM is used to transform analytically derived information into accessible natural-language explanations covering diagnostic observations, maintenance considerations, and environmental implications. It does not calculate the EFI itself.
 
-| Parameter | Idle key | Acceleration key | Unit |
-| --- | --- | --- | --- |
-| Hydrocarbons | `idle_hc` | `acc_hc` | ppm |
-| Carbon monoxide | `idle_co` | `acc_co` | % vol |
-| Carbon dioxide | `idle_co2` | `acc_co2` | % vol |
-| Oxygen | `idle_o2` | `acc_o2` | % vol |
-| Lambda | `idle_lambda` | `acc_lambda` | ratio |
-| Engine speed | `idle_rpm` | `acc_rpm` | rpm |
+The LLM component was evaluated as part of the research using a structured evaluation framework. The selected model achieved an overall evaluation score of **94.8**.
 
-All twelve values must be finite numbers in the range `0 … 10000`; the Edge Function
-rejects anything outside those bounds. `fuel_system`, when supplied, must be
-`Carbureted` or `EFI`.
+---
 
-## Scoring and interpretation
+## Platform Features
 
-The model output is clamped and rounded to an integer in `[1, 100]`. Condition bands:
+Eco EFI Check provides:
 
-| EFI score | Condition |
-| --- | --- |
-| 73 – 100 | Good |
-| 50 – 72 | Moderate |
-| 1 – 49 | Poor |
+* EFI estimation from vehicle-emission measurements
+* Engine-condition interpretation
+* EFI population-percentile comparison
+* Relative carbon-monoxide (CO) position assessment
+* Rule-based diagnostic indicators
+* LLM-assisted diagnostic and environmental insights
+* Vehicle-analysis history for authenticated users
+* Downloadable assessment reports
+* Web-based environmental decision support
 
-Percentiles use the empirical cumulative distribution of the reference dataset:
+---
+
+## Input Features
+
+The deployed EFI model uses vehicle-emission characteristics measured under idle and accelerated operating conditions.
+
+The model inputs include:
+
+| Measurement          | Idle | Accelerated |
+| -------------------- | :--: | :---------: |
+| Hydrocarbons (HC)    |   ✓  |      ✓      |
+| Carbon monoxide (CO) |   ✓  |      ✓      |
+| Carbon dioxide (CO₂) |   ✓  |      ✓      |
+| Oxygen (O₂)          |   ✓  |      ✓      |
+| Lambda (λ)           |   ✓  |      ✓      |
+| Engine speed (RPM)   |   ✓  |      ✓      |
+
+These correspond to the emission characteristics used by the EFI prediction model described in the associated research paper.
+
+## System Architecture
+
+The deployed application follows a web-based client–backend architecture.
 
 ```text
-percentile = round( count(reference_values <= value) / count(reference_values) * 100 )
+Vehicle Emission Measurements
+            |
+            v
+      Eco EFI Check
+     Web Application
+            |
+            v
+    Supabase Backend
+            |
+            +--------------------------+
+            |                          |
+            v                          v
+     EFI Prediction              Reference Data
+   Random Forest Model            Distributions
+            |
+            v
+   Diagnostic Reasoning
+            |
+            v
+ LLM-Assisted Interpretation
+            |
+            v
+ Environmental Decision Support
 ```
 
-applied to the EFI score (higher is better) and to average CO,
-`co_average = (acc_co + idle_co) / 2` (a higher CO percentile means the vehicle emits more
-carbon monoxide than that share of the reference population).
+The frontend provides vehicle-emission data entry and presentation of assessment results. Backend processing is implemented using Supabase services and server-side functions for model inference, diagnostic processing, reference-distribution comparison, and LLM-assisted insight generation.
 
-## Diagnostic rule engine
+---
 
-Deterministic indicators computed from the mean of the idle and acceleration readings.
-They are shown to the user and are the only engine-state facts passed to the LLM, which
-keeps the generated text grounded.
+## Technology Stack
 
-| Indicator | Condition | Label |
-| --- | --- | --- |
-| Mixture state (mean lambda) | `< 1.00` / `1.00–1.12` / `> 1.12` | Rich / Balanced / Lean |
-| Combustion quality (mean HC) | `< 75` / `75–170` / `> 170` | Efficient / Moderate / Incomplete combustion |
-| Fuel-burn efficiency (mean CO) | `< 0.2` / `0.2–0.55` / `> 0.55` | Clean / Moderate / Excess fuel |
-| Oxygen balance (mean O₂) | `< 2` / `2–4` / `> 4` | Normal / Elevated / Excess oxygen |
+| Component          | Technology                   |
+| ------------------ | ---------------------------- |
+| Frontend           | React, TypeScript, Vite      |
+| User interface     | Tailwind CSS, shadcn/ui      |
+| Backend            | Supabase Edge Functions      |
+| Database           | PostgreSQL                   |
+| Authentication     | Supabase Auth / Google OAuth |
+| Storage            | Supabase Storage             |
+| ML model           | Random Forest regression     |
+| Model development  | Python / scikit-learn        |
+| Deployed inference | TypeScript                   |
+| Generative AI      | LLM API integration          |
 
-## AI insight layer
+The web application was developed with the assistance of **Lovable**, an AI-assisted software development platform. The underlying EFI methodology, trained prediction model, analytical procedures, diagnostic logic, and research evaluation were developed and validated as part of the research study.
 
-The LLM receives only derived values — EFI score, EFI percentile, condition band, engine
-type, the four diagnostic flags and the CO percentile — never free text from the user. It
-must return JSON with exactly these keys:
+---
 
-`summary`, `likely_causes`, `recommended_actions`, `maintenance_tips`,
-`environmental_summary`
+## Project Structure
 
-The prompt forbids inventing faults that the flags do not support, forbids quantitative
-claims about fuel economy or carbon footprint, and pins the direction of the CO percentile
-interpretation. Malformed output is repaired and re-parsed; if the provider is unavailable
-the response carries `ai_error` and the rest of the analysis is still displayed.
+The main application components are organised approximately as follows:
 
-## Data model
+```text
+.
+├── public/
+│
+├── src/
+│   ├── components/
+│   ├── hooks/
+│   ├── integrations/
+│   └── pages/
+│
+├── supabase/
+│   ├── functions/
+│   │   └── predict_efi/
+│   └── migrations/
+│
+├── package.json
+└── README.md
+```
 
-`public.efi_records`
+The `src/` directory contains the web-interface components and application pages, while `supabase/` contains backend functions and database-related resources used by the deployed platform.
 
-| Column | Type | Notes |
-| --- | --- | --- |
-| `id` | `uuid` | primary key |
-| `user_id` | `uuid` | owner, references the auth user |
-| `input` | `jsonb` | the 12 readings plus vehicle metadata |
-| `efi_score` | `integer` | 0–100, check-constrained |
-| `percentile` | `integer` | EFI percentile |
-| `condition` | `text` | Good / Moderate / Poor |
-| `diagnostic_flags` | `jsonb` | rule-engine output |
-| `ai_insight` | `jsonb` | LLM report |
-| `co_percentile` | `integer` | CO percentile |
-| `co_average` | `numeric` | mean CO (% vol) |
-| `is_deleted` | `boolean` | soft delete, default `false` |
-| `created_at` | `timestamptz` | default `now()` |
+---
 
-Row-level security restricts every operation to `auth.uid() = user_id`; deletion is a soft
-delete so historical analyses remain available for research aggregation while disappearing
-from the user's history view.
+## Running the Web Application Locally
 
-## Getting started
+### Requirements
 
-Requirements: Node.js 18+ (or Bun) and a Supabase project.
+* Node.js 18 or later
+* npm
+* A configured Supabase project for backend functionality
 
-```sh
+Clone the repository:
+
+```bash
 git clone <repository-url>
 cd <repository-directory>
+```
+
+Install dependencies:
+
+```bash
 npm install
-npm run dev          # http://localhost:8080
 ```
 
-Scripts:
+Start the development server:
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | start the Vite dev server |
-| `npm run build` | production build to `dist/` |
-| `npm run build:dev` | development-mode build |
-| `npm run preview` | serve the production build locally |
-| `npm run lint` | ESLint over the project |
-
-### Backend setup
-
-1. Apply the SQL migrations in `supabase/migrations/` to your project.
-2. Create a storage bucket named `efi-distribution` and upload
-   `efi_distribution.json` and `co_distribution.json` (JSON arrays, or objects with
-   numeric values, of reference scores).
-3. Enable the Google auth provider and add your app origin to the allowed redirect URLs.
-4. Deploy the Edge Function in `supabase/functions/predict_efi/`.
-
-## Configuration
-
-Client environment variables (`.env`):
-
-```sh
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_PUBLISHABLE_KEY=...
-VITE_SUPABASE_PROJECT_ID=...
+```bash
+npm run dev
 ```
 
-Edge Function secrets:
+A local frontend instance will then be available at the address reported by Vite.
 
-| Name | Purpose |
-| --- | --- |
-| `SUPABASE_URL` | injected by the platform |
-| `SUPABASE_ANON_KEY` | injected; used to verify the caller's JWT |
-| `SUPABASE_SERVICE_ROLE_KEY` | injected; reads the reference distributions from storage |
-| `GPT_API_KEY` | API key for the chat-completions provider |
+### Environment Configuration
 
-Never commit secrets; the publishable/anon key is the only key intended for the client.
+The application requires the appropriate Supabase configuration variables.
 
-## Project structure
+For example:
 
-```text
-public/                       static assets, social preview image
-src/
-  components/
-    AIInsightCard.tsx         LLM report rendering
-    COEmissionCard.tsx        CO percentile visualisation
-    DistributionBar.tsx       EFI population distribution
-    EFIGauge.tsx              score gauge
-    EcoTipCard.tsx            highlighted environmental-impact section
-    EmissionInput.tsx         validated numeric field
-    HeroBackground.tsx        landing visual
-    ui/                       shadcn/ui primitives
-  hooks/useAuth.tsx           session context
-  integrations/supabase/      generated client and types
-  pages/
-    Index.tsx                 landing
-    Auth.tsx                  Google sign-in
-    Analyze.tsx               emission input, prediction call, persistence
-    Results.tsx               results dashboard and PDF export
-    History.tsx               paginated past analyses
-supabase/
-  functions/predict_efi/      Edge Function + exported Random-Forest model
-  migrations/                 database schema evolution
+```env
+VITE_SUPABASE_URL=<your-supabase-url>
+VITE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key>
+VITE_SUPABASE_PROJECT_ID=<your-project-id>
 ```
 
-## Security
+Backend services and external APIs may require additional secrets. API keys, service-role credentials, and other private credentials must **not** be committed to the repository.
 
-- All analysis requests require a valid JWT; the Edge Function verifies claims before
-  doing any work.
-- Row-level security isolates records per user; no cross-user reads are possible.
-- Input is range- and type-validated server-side; internal errors are never surfaced
-  verbatim to clients.
-- The LLM never receives user-authored free text, which removes the prompt-injection
-  surface from the diagnostic path.
+---
+
+## Research Data
+
+The vehicle-emission inspection data used to develop and evaluate the framework were obtained from the **Vehicle Emission Testing Programme of the Department of Motor Traffic, Sri Lanka**.
+
+The original research dataset is **not included in this repository** because the authors do not have permission to redistribute the source data publicly.
+
+Consequently, cloning this repository does not provide the original vehicle-emission records used for model development and independent evaluation.
+
+The repository contains the software components and supporting resources that can be publicly distributed by the authors.
+
+---
+
+## Reproducibility
+
+The repository accompanies the associated research publication and is intended to provide transparency regarding the software implementation of the proposed framework.
+
+The deployed EFI prediction model was developed from the methodology described in the paper. Researchers seeking to reproduce the complete model-development procedure should refer to the associated publication for details concerning:
+
+* data preprocessing;
+* feature selection;
+* EFI formulation;
+* clustering and clean-reference identification;
+* supervised EFI prediction;
+* independent evaluation;
+* explainability analysis;
+* diagnostic reasoning; and
+* LLM evaluation.
+
+Complete reproduction of the reported model-development results requires access to the original vehicle-emission dataset, which cannot be redistributed through this repository.
+
+---
 
 ## Limitations
 
-- The reference distributions and the trained model reflect the vehicle population
-  sampled during the research; percentiles are not globally representative.
-- The EFI score is a research indicator, not a regulatory or roadworthiness verdict.
-- Generated maintenance guidance is advisory and must not replace inspection by a
-  qualified technician.
-- Readings are entered manually, so results inherit any measurement or transcription
-  error from the source emission report.
+* The EFI is a **research-based environmental assessment indicator** and is not a regulatory vehicle-emission or roadworthiness certification.
+* The trained model reflects the vehicle population represented in the research dataset.
+* Population-relative EFI and emission comparisons should not be interpreted as globally representative vehicle-population statistics.
+* Results depend on the accuracy and quality of the emission measurements supplied to the platform.
+* LLM-generated explanations are intended as decision-support information and should not be interpreted as definitive mechanical diagnoses.
+* Maintenance-related recommendations do not replace inspection by a qualified automotive technician.
+* The platform demonstrates the practical implementation of the proposed research framework and should be interpreted in conjunction with the associated publication.
 
-## Citing this work
+---
 
-If you use this application or its methodology, please cite the associated research
-publication. Add the bibliographic entry here once the paper is published.
+## Associated Publication
+
+**J. Bandara and R. Nawarathna**
+
+*An Artificial Intelligence Framework for Continuous Environmental Assessment of Vehicle Emissions Using an Engine Freshness Index.*
+
+Submitted to **Environmental Modelling & Software**.
+
+Publication details and DOI will be added following publication.
+
+---
+
+## Authors
+
+**Janath Bandara**
+Department of Statistics and Computer Science
+University of Peradeniya
+Peradeniya 20400, Sri Lanka
+
+**Ruwan Nawarathna**
+Department of Statistics and Computer Science
+University of Peradeniya
+Peradeniya 20400, Sri Lanka
+
+---
+
+## Citation
+
+If you use Eco EFI Check or the associated methodology in academic research, please cite the corresponding research publication.
+
+A complete bibliographic citation and DOI will be added to this repository following publication.
+
+---
 
 ## License
 
-Released for academic and research use. Add a formal license file before external
-distribution.
+Licensing information for the publicly released source code should be specified in the repository's `LICENSE` file.
+
+Until a formal software license is provided, no additional rights to reuse, modify, or redistribute the source code should be assumed.
