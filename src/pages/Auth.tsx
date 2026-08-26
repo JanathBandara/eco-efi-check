@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeroBackground } from "@/components/HeroBackground";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Leaf, Loader2, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
@@ -31,9 +30,15 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    
+    // Using native Supabase OAuth instead of Lovable's wrapper
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin, // This points to your Vercel domain
+      }
     });
+
     if (error) {
       setIsLoading(false);
       console.error("OAuth error:", error);
