@@ -2,7 +2,7 @@
 
 **A web-based environmental decision-support platform for continuous vehicle-emission assessment using the Engine Freshness Index (EFI).**
 
-**Live application:** https://eco-efi-check.lovable.app
+**Live application:** https://www.ecoeficheck.org/
 
 ## Overview
 
@@ -100,8 +100,6 @@ The frontend provides vehicle-emission data entry and presentation of assessment
 | Deployed inference | TypeScript                   |
 | Generative AI      | LLM API integration          |
 
-The web application was developed with the assistance of **Lovable**, an AI-assisted software development platform. The underlying EFI methodology, trained prediction model, analytical procedures, diagnostic logic, and research evaluation were developed and validated as part of the research study.
-
 ---
 
 ## Project Structure
@@ -167,9 +165,9 @@ The application requires the appropriate Supabase configuration variables.
 For example:
 
 ```env
-VITE_SUPABASE_URL=<your-supabase-url>
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key>
-VITE_SUPABASE_PROJECT_ID=<your-project-id>
+VITE_SUPABASE_URL=<supabase-url>
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+VITE_SUPABASE_PROJECT_ID=<project-id>
 ```
 
 Backend services and external APIs may require additional secrets. API keys, service-role credentials, and other private credentials must **not** be committed to the repository.
