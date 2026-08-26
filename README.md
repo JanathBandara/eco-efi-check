@@ -8,51 +8,13 @@
 
 Eco EFI Check is the web-based implementation of the environmental assessment framework presented in the research study:
 
-**“An Artificial Intelligence Framework for Continuous Environmental Assessment of Vehicle Emissions Using an Engine Freshness Index.”**
+**“An AI-Driven Framework for Continuous Environmental Assessment of Vehicle Emissions Using an Engine Freshness Index.”**
 
 Traditional vehicle-emission testing primarily relies on binary pass/fail classifications based on predefined regulatory thresholds. The proposed framework extends this approach by transforming vehicle-emission measurements into a continuous and interpretable environmental assessment using hierarchical machine learning, explainability analysis, diagnostic reasoning, and LLM-assisted insight generation.
 
 The framework introduces the **Engine Freshness Index (EFI)**, a continuous indicator representing the degree to which observed vehicle-emission characteristics deviate from an environmentally favorable combustion state.
 
 Eco EFI Check demonstrates the practical implementation of this framework by integrating EFI estimation, diagnostic reasoning, population-relative emission assessment, and human-readable environmental and maintenance-related insights within a unified web platform.
-
----
-
-## Research Framework
-
-The framework consists of the following main stages:
-
-1. **Vehicle-emission data preprocessing**
-2. **Unsupervised EFI formulation**
-3. **Supervised EFI prediction**
-4. **Explainability analysis**
-5. **Diagnostic reasoning**
-6. **LLM-assisted insight generation**
-7. **Environmental decision support**
-
-### EFI Formulation
-
-EFI was formulated using an unsupervised learning approach. K-Means clustering was applied to identify emission patterns representing environmentally favorable combustion behavior. A clean-combustion reference was subsequently established, and distance-based modelling was used to derive the continuous EFI indicator.
-
-### EFI Prediction
-
-The derived EFI values were subsequently used as learning targets for supervised regression. A constrained Random Forest model was selected for deployment and achieved an **R² of 0.984 on independent vehicle-emission records**.
-
-The trained model is used by Eco EFI Check to estimate EFI values for newly supplied emission measurements.
-
-### Explainability and Diagnostic Reasoning
-
-Explainability analysis was used during the research to investigate the contribution of emission characteristics to EFI predictions and to verify that model behaviour was associated with physically meaningful combustion-efficiency and pollutant characteristics.
-
-Within the deployed platform, EFI results and emission measurements are further processed through a rule-based diagnostic reasoning layer. The resulting structured diagnostic information provides interpretations related to combustion behaviour, air–fuel balance, oxygen utilisation, fuel-burn efficiency, and relative emission performance.
-
-### LLM-Assisted Insight Generation
-
-Structured outputs from the EFI and diagnostic reasoning components are provided to an LLM-assisted insight-generation module.
-
-The LLM is used to transform analytically derived information into accessible natural-language explanations covering diagnostic observations, maintenance considerations, and environmental implications. It does not calculate the EFI itself.
-
-The LLM component was evaluated as part of the research using a structured evaluation framework. The selected model achieved an overall evaluation score of **94.8**.
 
 ---
 
