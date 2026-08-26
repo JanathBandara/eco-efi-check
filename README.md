@@ -218,7 +218,8 @@ Backend services and external APIs may require additional secrets. API keys, ser
 
 The vehicle-emission inspection data used to develop and evaluate the framework were obtained from the **Vehicle Emission Testing Programme of the Department of Motor Traffic, Sri Lanka**.
 
-The original research dataset is **not included in this repository** because the authors do not have permission to redistribute the source data publicly.
+The original research dataset is **not included in this repository**. Datasets used and analyzed during the current study are available from the corresponding
+author upon request.
 
 Consequently, cloning this repository does not provide the original vehicle-emission records used for model development and independent evaluation.
 
